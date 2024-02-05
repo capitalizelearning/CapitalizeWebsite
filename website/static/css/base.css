@@ -1,0 +1,86 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz@9..40&display=swap');
+*{
+    padding: 0;
+    margin: 0;
+    border: none;
+
+    font-family: 'DM Sans', sans-serif;
+}
+
+body{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+}
+
+nav{
+    display: flex;
+    width: 100%;
+    height: 7.5vh;
+    justify-content: space-around;
+    align-items: center;
+
+    border-bottom: 1px #191B1D solid;
+}
+
+nav img{
+    height: 90%;
+}
+
+nav ul{
+    display: flex;
+    flex-direction: row;
+}
+
+nav ul :last-child{
+    padding-right: 0;
+}
+
+nav ul li{
+    display: flex;
+    flex-direction: row;
+    color: #191B1D;
+    opacity: 50%;
+    padding-right: 2vw;
+}
+
+nav #right{
+    display: flex;
+    flex-direction: row;
+}
+
+
+nav #right .search{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 5vh;
+    height: 5vh;
+    border-radius: 100%;
+
+    border: solid 1px #8C8D8E;
+}
+
+nav #right .search svg{
+    fill: #8C8D8E;
+}
+
+nav #right .login{
+    display: flex;
+    width: 15vh;
+    height: 5vh;
+    margin-left: 1vw;
+
+    border-radius: 30px;
+    background-color: #000;
+
+    align-items: center;
+    justify-content: center;
+}
+
+nav #right .login p{
+    color: #fff;
+    font-size: 16px;
+}

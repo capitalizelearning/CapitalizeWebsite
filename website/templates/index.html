@@ -1,4 +1,17 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/landing.css' %}">
+{% endblock %}
 
 {% block title %}Home{% endblock %}
 
+{% block body %}
+<div class="landing">
+    <p class="tag">INTRODUCING FINANCE</p>
+
+    <h1>Your Gateway to <br /> Financial Freedom</h1>
+
+</div>
+{% endblock %}
