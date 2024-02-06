@@ -1,11 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block css %}
-.get-started-cta {
-
-}
-{% endblock %}
 
 {% block title %}Home{% endblock %}
 
@@ -504,13 +499,19 @@
                     <p class="text-lg text-text-light leading-relaxed">Our app eliminates the need for complex spreadsheets,endless email threads, empowering businesses to achieve
                         greater efficiency.</p>
 
-                    <form class="flex items-center gap-4">
+                    <form class="flex items-center gap-4"
+                          action="{% url 'index' %}"
+                          method="POST">
+                        {% csrf_token %}
                         <input type="email"
+                               required
+                               autocomplete="email"
+                               name="email"
                                placeholder="Enter your email"
                                class="w-full py-2 px-4 rounded-full border-2 border-solid border-[#F8F8F8]">
                         <button type="submit"
                                 class="bg-[#0F0F0F] text-[#FBFBFB] py-3 px-6 rounded-full flex-shrink-0">
-                            Join waitlist
+                            Join waitlist</button>
                     </form>
                 </div>
                 <div class="get-started-cta">
