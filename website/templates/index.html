@@ -2,16 +2,107 @@
 {% load static %}
 
 {% block css %}
-<link rel="stylesheet" href="{% static 'css/landing.css' %}">
 {% endblock %}
 
 {% block title %}Home{% endblock %}
 
 {% block body %}
-<div class="landing">
-    <p class="tag">INTRODUCING FINANCE</p>
+<div class="w-full container mx-auto">
+    <section>
+        <div class="flex flex-col items-center w-full gap-6 my-32">
+            <div>
+                <p class="uppercase font-semibold text-[#02A854]">
+                    INTRODUCING FINANCE
+                </p>
+            </div>
+            <div class="w-full max-w-screen-md mx-auto space-y-8">
+                <h1 class="text-7xl font-bold text-center text-primary">
+                    Your Gateway to
+                    Financial Freedom!
+                </h1>
+                <p class="text-lg text-text-light text-center leading-relaxed">
+                    Our app streamlines financial management, providing a comprehensive starters guide,
+                    empowering users to achieve greater efficiency in their financial goals.
+                </p>
+                <div class="flex justify-center gap-4 mb-6">
+                    <a href="#"
+                       class="flex items-center gap-2 bg-green-950 text-white py-4 px-10 rounded-full text-lg font-semibold">
+                        Get Started
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             class="stroke-white h-6 w-6"
+                             width="44"
+                             height="44"
+                             viewBox="0 0 24 24"
+                             stroke-width="1.5"
+                             fill="none"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path stroke="none"
+                                  d="M0 0h24v24H0z"
+                                  fill="none" />
+                            <path d="M9 6l6 6l-6 6" />
+                        </svg>
+                    </a>
+                </div>
+                <p class="text-center text-text-light text-xs">1,200+ reviewers (4.9 out of 5)</p>
+            </div>
+        </div>
+        <div class="w-full mb-12">
+            <img src="{% static 'imgs/application_v1.png' %}"
+                 class="w-full"
+                 alt="hero">
+        </div>
+        <div class="flex flex-col items-center justify-center w-full mb-12">
+            <p class="text-lg font-semibold text-text mb-4">Trusted by the world leaders</p>
+            <div class="flex gap-12">
+                <img src="{% static 'imgs/brands/loom.png' %}"
+                     class="h-12"
+                     alt="loom">
+                <img src="{% static 'imgs/brands/maze.png' %}"
+                     class="h-12"
+                     alt="maze">
+                <img src="{% static 'imgs/brands/framer.png' %}"
+                     class="h-12"
+                     alt="framer">
+                <img src="{% static 'imgs/brands/square.png' %}"
+                     class="h-12"
+                     alt="square">
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="flex flex-col items-center w-full gap-8 my-32">
+            <div class="flex items-center gap-1.5 border border-solid border-[#02A854] text-[#02A854] rounded-full px-2 py-1 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     fill="none"
+                     viewBox="0 0 24 24"
+                     stroke-width="1.5"
+                     stroke="currentColor"
+                     class="w-6 h-6">
+                    <path stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                </svg>
+                Features
+            </div>
+            <h2 class="text-6xl font-bold text-primary-dark">Product Features</h2>
+            <p class="text-lg text-text-light text-center leading-relaxed mb-12">We take immense pride in presenting you with a comprehensive array of powerful tools and<br> capabilities that are designed to elevate your experience and help you achieve more.</p>
 
-    <h1>Your Gateway to <br /> Financial Freedom</h1>
-
+            <div class="flex items-center justify-center gap-8 w-full">
+                <img src="{% static 'imgs/features_tile_1.png' %}"
+                     alt="feature_1">
+                <img src="{% static 'imgs/features_tile_2.png' %}"
+                     alt="feature_2">
+            </div>
+            <div class="flex items-center justify-center gap-8 w-full">
+                <img src="{% static 'imgs/features_tile_3.png' %}"
+                     alt="feature_3">
+                <img src="{% static 'imgs/features_tile_4.png' %}"
+                     alt="feature_4">
+                <img src="{% static 'imgs/features_tile_5.png' %}"
+                     alt="feature_5">
+            </div>
+        </div>
+    </section>
 </div>
 {% endblock %}
