@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+          href="{% static 'css/base.css' %}">
+    <link rel="stylesheet"
+          href="{% static 'css/tailwind.css' %}">
+    <title>Login</title>
+</head>
+
+<body>
+    <div class="container min-h-screen mx-auto flex flex-col items-center justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 overflow-hidden P-6">
+            <div class="">
+                <img src="{% static 'imgs/login.png' %}"
+                     alt="Login"
+                     class="w-full h-full rounded-lg">
+            </div>
+            <div class="flex flex-col items-center justify-center w-full">
+                <h1 class="text-4xl font-bold text-center mb-2">Welcome Back!</h1>
+                <p class="text-center mb-4 text-lg text-neutral-700">Access your future financial freedom ahead!</p>
+                <div class="flex flex-col w-full max-w-sm gap-6">
+                    <form action="/accounts/login/"
+                          class="space-y-4"
+                          method="POST">
+                        {% csrf_token %}
+                        <div class="relative z-0">
+                            <input type="text"
+                                   id="email-label"
+                                   class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                   placeholder=" " />
+                            <label for="email-label"
+                                   class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Email</label>
+                        </div>
+                        <div class="relative z-0">
+                            <input type="text"
+                                   id="password-label"
+                                   class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                   placeholder=" " />
+                            <label for="password-label"
+                                   class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Password</label>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center">
+                                <input type="checkbox"
+                                       id="remember-me"
+                                       class="rounded border-gray-300 text-[#118B4E] shadow-sm focus:border-green-400 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                                       checked />
+                                <label for="remember-me"
+                                       class="ml-2 block text-sm text-gray-900">Remember me</label>
+                            </div>
+                            <a href="#"
+                               class="text-[#118B4E] font-bold">Forgot Password?</a>
+                        </div>
+                        <div class="mb-4">
+                            <button type="submit"
+                                    class="w-full bg-[#118B4E] hover:bg-primary text-white font-bold py-2 px-4 rounded">Login</button>
+                        </div>
+                    </form>
+
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="flex-1 h-0.5 bg-gray-300"></span>
+                        <span class="text-gray-500">or</span>
+                        <span class="flex-1 h-0.5 bg-gray-300"></span>
+                    </div>
+                    <div class="flex items-center justify-center gap-4">
+                        <a href="#"
+                           class="w-full bg-transparent hover:bg-neutral-200 text-neutral-900  font-bold py-2 px-4 flex items-center justify-center gap-2 rounded border border-neutral-800">
+                            <img src="https://img.icons8.com/color/24/000000/google-logo.png"
+                                 alt="Google" />
+                            <span>Login with Google</span>
+                        </a>
+                    </div>
+
+                    <p class="text-center">
+                        Don't have an account? <a href="#"
+                           class="text-green-500">Register</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
