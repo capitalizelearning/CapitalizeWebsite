@@ -5,3 +5,12 @@
 @tailwind utilities;
 @tailwind variants;
 
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz@9..40&display=swap');
+html {
+    margin: 0;
+    padding: 0;
+}
+*{
+    box-sizing: border-box;
+    font-family: 'DM Sans', sans-serif;
+}
