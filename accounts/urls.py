@@ -1,4 +1,4 @@
-"""capitalize URL Configuration
+"""`accounts` App URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.0/topics/http/urls/
@@ -13,13 +13,13 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import include, path
+from django.urls import path
 
-from accounts.urls import urlpatterns as accounts_urls
+from accounts import views as accounts_views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('website.urls')),
-    path('accounts/', include(accounts_urls)),
+    path('login/', accounts_views.login_user, name='login'),
+    path('logout/', accounts_views.logout_user, name='logout'),
+    path('register/', accounts_views.register_user, name='register'),
+    path('profile/', accounts_views.profile, name='profile'),
 ]
