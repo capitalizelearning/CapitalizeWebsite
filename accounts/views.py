@@ -81,20 +81,21 @@ def register_user(request):
         if not (username and first_name and last_name and password
                 and password_confirm):
             messages.error(request, "Please fill in all the fields")
-            return render(request, 'auth/register.html')
+            return redirect("register")
 
         if password != password_confirm:
             messages.error(request, "Passwords do not match")
             return render(request, 'auth/register.html')
 
         if User.objects.filter(username=username).exists():
-            messages.error(request, "Username already exists")
-            return render(request, 'auth/register.html')
+            messages.error(request, "Email already exists. Please login.")
+            return redirect("register")
 
-        user = User.objects.create_user(first_name=first_name,
-                                        last_name=last_name,
-                                        username=username,
-                                        password=password)
+        user = User.objects.create_user(username=username,
+                                        email=username,
+                                        password=password,
+                                        first_name=first_name,
+                                        last_name=last_name)
         user.save()
         messages.success(request, "Account created successfully")
         return redirect('login')
