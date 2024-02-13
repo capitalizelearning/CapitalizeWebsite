@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+          href="{% static 'css/tailwind.css' %}">
+    <title>Register</title>
+</head>
+
+<body>
+    <div class="container min-h-screen mx-auto flex flex-col items-center justify-center">
+        <div class="grid grid-cols-1 md:grid-cols-2 overflow-hidden P-6">
+            <div class="">
+                <img src="{% static 'imgs/register.png' %}"
+                     alt="Register"
+                     class="w-full h-full rounded-lg">
+            </div>
+            <div class="flex flex-col items-center justify-center w-full">
+                <h1 class="text-4xl font-bold mb-2">Welcome to Capitalize!</h1>
+                <p class="mb-4 text-lg text-neutral-700">Access your future financial freedom ahead!</p>
+                <div class="flex flex-col w-full max-w-sm gap-6">
+                    {% if messages %}
+                    <ul class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+                        role="alert">
+                        {% for message in messages %}
+                        <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    <form action="/accounts/register/"
+                          class="space-y-4"
+                          enctype="application/x-www-form-urlencoded"
+                          method="POST">
+                        {% csrf_token %}
+                        <div class="flex flex-col md:flex-row w-full gap-4">
+                            <div class="relative z-0 flex-1">
+                                <input type="text"
+                                       id="first-name-label"
+                                       name="first_name"
+                                       class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                       placeholder=" " />
+                                <label for="first-name-label"
+                                       class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">First Name</label>
+                            </div>
+                            <div class="relative z-0 flex-1">
+                                <input type="text"
+                                       id="last-name-label"
+                                       name="last_name"
+                                       class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                       placeholder=" " />
+                                <label for="last-name-label"
+                                       class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Last Name</label>
+                            </div>
+                        </div>
+                        <div class="relative z-0">
+                            <input type="email"
+                                   id="email-label"
+                                   name="username"
+                                   class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                   placeholder=" " />
+                            <label for="email-label"
+                                   class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Email</label>
+                        </div>
+                        <div class="relative z-0">
+                            <input type="password"
+                                   id="password-label"
+                                   name="password"
+                                   class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                   placeholder=" " />
+                            <label for="password-label"
+                                   class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Password</label>
+                        </div>
+                        <div class="relative z-0">
+                            <input type="password"
+                                   id="confirm-password-label"
+                                   name="password_confirm"
+                                   class="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none  focus:outline-none focus:ring-0 focus:border-[#118B4E] peer"
+                                   placeholder=" " />
+                            <label for="confirm-password-label"
+                                   class="absolute text-sm text-gray-500 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-[#118B4E] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Confirm Password</label>
+                        </div>
+                        <div class="mb-4">
+                            <button type="submit"
+                                    class="w-full bg-[#118B4E] hover:bg-primary text-white font-bold py-2 px-4 rounded">Continue</button>
+                        </div>
+                    </form>
+
+                    <div class="flex items-center justify-center gap-2">
+                        <span class="flex-1 h-0.5 bg-gray-300"></span>
+                        <span class="text-gray-500">or</span>
+                        <span class="flex-1 h-0.5 bg-gray-300"></span>
+                    </div>
+                    <div class="flex items-center justify-center gap-4">
+                        <a href="#"
+                           class="w-full bg-transparent hover:bg-neutral-200 text-neutral-900  font-bold py-2 px-4 flex items-center justify-center gap-2 rounded border border-neutral-800">
+                            <img src="https://img.icons8.com/color/24/000000/google-logo.png"
+                                 alt="Google" />
+                            <span>Continue with Google</span>
+                        </a>
+                    </div>
+
+                    <p class="text-center">
+                        Don't have an account? <a href="#"
+                           class="text-[#118B4E] fpmt-medium">Register</a>
+                    </p>
+
+                    <p class="text-sm text-neutral-700">
+                        By continuing, you agree to our <a href="#"
+                           class="text-[#118B4E] fpmt-medium">Terms of Service</a> and <a href="#"
+                           class="text-[#118B4E] fpmt-medium">Privacy Policy</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+</body>
+
+</html>
