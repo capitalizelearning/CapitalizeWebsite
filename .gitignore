@@ -140,3 +140,4 @@ GitHub.sublime-settings
 # node
 node_modules/
 
+test_api.http

@@ -61,7 +61,7 @@ class LoginView(APIView):
         grant_type: str = request.POST.get('grant_type')
 
         # Validate grant type
-        if grant_type != 'password':
+        if grant_type and grant_type != 'password':
             return Response({"error": "Invalid grant type"},
                             status=status.HTTP_400_BAD_REQUEST,
                             headers={"WWW-Authenticate": "Bearer"})
