@@ -1,8 +1,24 @@
+"""
+    Account models for the application.
+    Contains account related models and their serializers.
+"""
 from enum import Enum
 
 from django.contrib.auth.models import User
-from django.core import serializers
 from django.db import models
+from rest_framework import serializers
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the user model."""
+
+    class Meta:
+        """Meta class for the user serializer."""
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name', 'is_staff',
+            'is_active', 'date_joined'
+        ]
 
 
 class WaitingList(models.Model):
@@ -16,11 +32,15 @@ class WaitingList(models.Model):
     def __str__(self):
         return f"<WaitingList: {self.id}>"
 
-    def serialize(self, output_format: str = 'json'):
-        """Return a serialized representation of the model instance in the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class WaitListSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the waiting list model."""
+
+    class Meta:
+        """Meta class for the waiting list serializer."""
+        model = WaitingList
+        fields = ['id', 'date_joined', 'is_registered']
+
 
 class ProfileType(Enum):
     """Enumeration for user profile types."""
@@ -45,11 +65,17 @@ class Profile(models.Model):
     def __str__(self):
         return f"<Profile: {self.user.username}>"  # pylint: disable=no-member
 
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class ProfileSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the user profile model."""
+
+    class Meta:
+        """Meta class for the user profile serializer."""
+        model = Profile
+        fields = [
+            'id', 'account_type', 'user', 'phone_number', 'is_2fa_enabled',
+            'streak_days'
+        ]
 
 
 class Preferences(models.Model):
@@ -65,11 +91,17 @@ class Preferences(models.Model):
     def __str__(self):
         return f"<Preferences: {self.user.username}>"  # pylint: disable=no-member
 
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class PreferencesSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the user preferences model."""
+
+    class Meta:
+        """Meta class for the user preferences serializer."""
+        model = Preferences
+        fields = [
+            'id', 'user', 'email_notifications', 'sms_notifications',
+            'language'
+        ]
 
 
 class Institution(models.Model):
@@ -90,11 +122,17 @@ class Institution(models.Model):
     def __str__(self):
         return f"<Institution: {self.name}>"
 
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class InstitutionSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the institution model."""
+
+    class Meta:
+        """Meta class for the institution serializer."""
+        model = Institution
+        fields = [
+            'id', 'short_code', 'name', 'street_address', 'city', 'state',
+            'postal_code', 'country', 'phone_number', 'contact_person'
+        ]
 
 
 class Class(models.Model):
@@ -113,11 +151,17 @@ class Class(models.Model):
     def __str__(self):
         return f"<Class: {self.long_name}>"
 
-    def serialize(self, output_format: str = 'json'):
-        """Return a serialized representation of the model instance in the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class ClassSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the class model."""
+
+    class Meta:
+        """Meta class for the class serializer."""
+        model = Class
+        fields = [
+            'id', 'institution', 'short_code', 'long_name', 'short_name',
+            'description', 'instructor'
+        ]
 
 
 class Enrollment(models.Model):
@@ -132,8 +176,11 @@ class Enrollment(models.Model):
     def __str__(self):
         return f"<Enrollment: {self.student.username} in {self.class_id.long_name}>"  # pylint: disable=no-member
 
-    def serialize(self, output_format: str = 'json'):
-        """Return a serialized representation of the model instance in the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class EnrollmentSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the enrollment model."""
+
+    class Meta:
+        """Meta class for the enrollment serializer."""
+        model = Enrollment
+        fields = ['id', 'student', 'class_id', 'date_enrolled']
