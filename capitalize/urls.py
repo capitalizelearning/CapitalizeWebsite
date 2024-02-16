@@ -21,7 +21,7 @@ from accounts.urls import urlpatterns as accounts_urls
 urlpatterns = [
     # path('admin/', admin.site.urls),
     # path('', include('website.urls')),
-    path('api/auth/', include(accounts_urls)),
+    path('v1/auth/', include(accounts_urls)),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
