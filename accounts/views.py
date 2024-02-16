@@ -1,131 +1,55 @@
 """
     This module contains the views for the accounts app.
 """
-from functools import wraps
+
+import re
 
 from django.contrib.auth.models import User
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt import authentication
 
-from accounts.models import UserSerializer
-from accounts.utils.jwt_helper import TokenHelper
-
-
-def jwt_required(f):
-    """Decorator for views that require JWT authentication.
-        
-        Sets the `request.user` attribute to the authenticated user.
-        @example:
-        ```python
-        class MyView(APIView):
-            @jwt_required
-            def get(self, request):
-                user: User = request.user
-                return JsonResponse({"message": f"Hello, {user.username}!"})
-        ```
-    """
-
-    @wraps(f)
-    def decorated_function(request, *args, **kwargs):
-        token = request.headers.get("Authorization")
-        if token is None:
-            return Response({"error": "Missing authorization header"},
-                            status=status.HTTP_401_UNAUTHORIZED,
-                            headers={"WWW-Authenticate": "Bearer"})
-
-        token = token.split(" ")[1]
-        user = TokenHelper.decode_token(token)
-        if user is None:
-            return Response({"error": "Invalid token"},
-                            status=status.HTTP_401_UNAUTHORIZED,
-                            headers={"WWW-Authenticate": "Bearer"})
-        request.user = user
-        return f(request, *args, **kwargs)
-
-    return decorated_function
-
-
-class LoginView(APIView):
-    """Login view."""
-
-    def post(self, request):
-        """Verifies username and password, and returns a JWT auth token" """
-        if request.content_type != 'application/x-www-form-urlencoded':
-            return Response({"error": "Invalid content type"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Request body
-        username: str = request.POST.get('username')
-        password: str = request.POST.get('password')
-        grant_type: str = request.POST.get('grant_type')
-
-        # Validate grant type
-        if grant_type and grant_type != 'password':
-            return Response({"error": "Invalid grant type"},
-                            status=status.HTTP_400_BAD_REQUEST,
-                            headers={"WWW-Authenticate": "Bearer"})
-
-        # Validate username and password
-        if (not username or not password):
-            return Response(
-                {"error": "Both username and password are required fields"},
-                status=status.HTTP_400_BAD_REQUEST,
-                headers={"WWW-Authenticate": "Bearer"})
-
-        # Authenticate user
-        user: User = User.objects.filter(username=username).first()
-        if user is not None and user.check_password(password):
-            # Generate token
-            (token, expires) = TokenHelper.encode_token(user)
-            return Response({
-                "access_token": token,
-                "expires_in": expires,
-                "token_type": "Bearer"
-            })
-        return Response({"error": "Invalid username or password"},
-                        status=status.HTTP_401_UNAUTHORIZED,
-                        headers={"WWW-Authenticate": "Bearer"})
-
-
-class RegisterView(APIView):
-    """Register view"""
-
-    def post(self, request):
-        """Registers a new user."""
-        if request.content_type != 'application/x-www-form-urlencoded':
-            return Response({"error": "Invalid content type"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Request body
-        username: str = request.POST.get('username')
-        password: str = request.POST.get('password')
-        email: str = request.POST.get('email')
-        first_name: str = request.POST.get('first_name')
-        last_name: str = request.POST.get('last_name')
-
-        # Validate username and password
-        if (not username or not password):
-            return Response(
-                {"error": "Both username and password are required fields"},
-                status=status.HTTP_400_BAD_REQUEST)
-
-        # Create user
-        user: User = User.objects.create_user(username=username,
-                                              email=email,
-                                              password=password,
-                                              first_name=first_name,
-                                              last_name=last_name)
-        user.save()
-        return Response({"message": "User created successfully"},
-                        status=status.HTTP_201_CREATED)
+from accounts.models import UserSerializer, WaitingList
 
 
 class ProfileView(APIView):
     """Profile view."""
+    authentication_classes = [authentication.JWTAuthentication]
+    permission_classes = [IsAuthenticated]
 
-    @jwt_required
-    def get(self):
+    def get(self, request):
         """Returns the user's profile information."""
-        user: User = self.request.user
+        user: User = request.user
         return Response(UserSerializer(user).data)
+
+
+class WaitListView(APIView):
+    """Wait-list view."""
+
+    def post(self, request):
+        """Adds a user to the wait-list"""
+        email: str = request.data.get('email')
+        if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            return Response({"error": "Please provide a valid email address"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        # Check if user is already in the wait-list
+        user = WaitingList.objects.filter(email=email).first()  # pylint: disable=no-member
+        if user is not None:
+            return Response({"message": "You are already in the wait-list"},
+                            status=status.HTTP_200_OK)
+        WaitingList.objects.create(email=email)  # pylint: disable=no-member
+
+        return Response({"message": "You have been added to the wait-list"},
+                        status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        """Returns the wait-list"""
+        if not request.user.is_staff:
+            return Response(
+                {"error": "You are not authorized to view this resource"},
+                status=status.HTTP_403_FORBIDDEN)
+        return Response(WaitingList.objects.all()  # pylint: disable=no-member
+                        .values_list('email', flat=True))
