@@ -12,12 +12,19 @@ from rest_framework import serializers
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for the user model."""
 
+    profile = serializers.HyperlinkedRelatedField(view_name='profile-detail',
+                                                  read_only=True)
+    preferences = serializers.HyperlinkedRelatedField(
+        view_name='preferences-detail', read_only=True)
+    enrollment = serializers.HyperlinkedRelatedField(
+        view_name='enrollment-detail', read_only=True)
+
     class Meta:
         """Meta class for the user serializer."""
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name', 'is_staff',
-            'is_active', 'date_joined'
+            'is_active', 'date_joined', 'profile', 'preferences', 'enrollment'
         ]
 
 
@@ -26,6 +33,7 @@ class WaitingList(models.Model):
         Represents users who are waiting to create an account."""
 
     id = models.AutoField(primary_key=True)
+    email = models.EmailField(unique=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     is_registered = models.BooleanField(default=False)
 
@@ -39,7 +47,7 @@ class WaitListSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         """Meta class for the waiting list serializer."""
         model = WaitingList
-        fields = ['id', 'date_joined', 'is_registered']
+        fields = ['id', 'email', 'date_joined', 'is_registered']
 
 
 class ProfileType(Enum):
@@ -154,6 +162,10 @@ class Class(models.Model):
 
 class ClassSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for the class model."""
+    institution = serializers.HyperlinkedRelatedField(
+        view_name='institution-detail', read_only=True)
+    instructor = serializers.HyperlinkedRelatedField(
+        view_name='profile-detail', read_only=True)
 
     class Meta:
         """Meta class for the class serializer."""

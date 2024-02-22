@@ -14,14 +14,14 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework_simplejwt.views import (TokenObtainPairView,
+                                            TokenRefreshView)
 
 from accounts import views as accounts_views
 
 urlpatterns = [
-    path('login/', accounts_views.LoginView.as_view(), name='login'),
-    path('register/', accounts_views.RegisterView.as_view(), name='register'),
-    path('profile/', accounts_views.ProfileView.as_view(), name='profile'),
+    path('', accounts_views.ProfileView.as_view(), name='profile'),
+    path('wait-list/', accounts_views.WaitListView.as_view(), name='wait-list'),
+    path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
-
-urlpatterns = format_suffix_patterns(urlpatterns)
