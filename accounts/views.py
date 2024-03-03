@@ -11,7 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt import authentication
 
-from accounts.models import UserSerializer, WaitingList
+from accounts.models import UserSerializer, WaitingList, WaitListSerializer
 
 
 class ProfileView(APIView):
@@ -51,5 +51,5 @@ class WaitListView(APIView):
             return Response(
                 {"error": "You are not authorized to view this resource"},
                 status=status.HTTP_403_FORBIDDEN)
-        return Response(WaitingList.objects.all()  # pylint: disable=no-member
-                        .values_list('email', flat=True))
+        waiting_list = WaitingList.objects.all()  # pylint: disable=no-member
+        return Response(WaitListSerializer(waiting_list, many=True).data)

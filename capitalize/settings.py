@@ -30,7 +30,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['capitalizelearn.com', 'localhost']
+ALLOWED_HOSTS = ['capitalizelearn.com', '127.0.0.1']
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
@@ -38,10 +38,19 @@ CORS_ALLOWED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin', 'django.contrib.auth',
-    'django.contrib.contenttypes', 'django.contrib.sessions',
-    'django.contrib.messages', 'django.contrib.staticfiles', 'rest_framework',
-    'rest_framework_simplejwt', 'corsheaders', 'website', 'accounts', 'lessons'
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.staticfiles',  # required for serving swagger ui's css/js files
+    'drf_yasg',
+    'django.contrib.messages',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'corsheaders',
+    'website',
+    'accounts',
+    'lessons'
 ]
 
 MIDDLEWARE = [
