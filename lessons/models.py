@@ -22,6 +22,7 @@ class ContentFormat(Enum):
     PDF = 'pdf'
 
 
+# Model Definitions
 class Content(models.Model):
     """Content model.
         Represents a lesson content."""
@@ -37,18 +38,6 @@ class Content(models.Model):
 
     def __str__(self):
         return f"<Content: {self.title}>"  # pylint: disable=no-member
-
-
-class ContentSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the lesson content model."""
-
-    class Meta:
-        """Meta class for the lesson content serializer."""
-        model = Content
-        fields = [
-            'id', 'title', 'description', 'content_uri', 'content_type',
-            'created_at', 'updated_at'
-        ]
 
 
 class Quiz(models.Model):
@@ -97,32 +86,6 @@ class QuizQuestion(models.Model):
         return answer == self.correct_index
 
 
-class QuizQuestionSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the lesson quiz question model."""
-
-    class Meta:
-        """Meta class for the lesson quiz question serializer."""
-        model = QuizQuestion
-        fields = ['id', 'question', 'options', 'created_at']
-
-
-class QuizSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the lesson quiz model."""
-    content_id = serializers.PrimaryKeyRelatedField(
-        queryset=Content.objects.all())  # pylint: disable=no-member
-    owner_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())  # pylint: disable=no-member
-    class_id = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all())  # pylint: disable=no-member
-    questions = QuizQuestionSerializer(many=True, read_only=True)
-
-    class Meta:
-        """Meta class for the lesson quiz serializer."""
-        model = Quiz
-        fields = [
-            'id', 'title', 'class_id', 'content_id', 'owner_id', 'description',
-            'questions', 'created_at'
-        ]
-
-
 class QuizProgress(models.Model):
     """Quiz progress model.
         Represents a student's progress in a lesson quiz."""
@@ -138,13 +101,62 @@ class QuizProgress(models.Model):
         return f"<QuizProgress: {self.student.username} in {self.quiz.title}>"  # pylint: disable=no-member
 
 
+# Serializers Definitions
+class ContentSerializer(serializers.ModelSerializer):
+    """Serializer for the lesson content model."""
+
+    class Meta:
+        """Content serializer meta class."""
+        model = Content
+        fields = '__all__'
+
+
+class QuizSerializer(serializers.ModelSerializer):
+    """Serializer for the lesson quiz model."""
+    
+    def get_question_list(self, obj):
+        """Returns the list of questions for the quiz."""
+        return RestrictedQuizQuestionSerializer(obj.questions, many=True).data
+    
+    question_list = serializers.SerializerMethodField()
+    class Meta:
+        """Quiz serializer meta class."""
+        model = Quiz
+        fields = '__all__'
+
+
+class QuizQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for the lesson quiz question model. Includes the correct answer."""
+
+    class Meta:
+        """Quiz question serializer meta class."""
+        model = QuizQuestion
+        fields = '__all__'
+
+
+class RestrictedQuizQuestionSerializer(serializers.ModelSerializer):
+    """Serializer for the lesson quiz question model. Excludes the correct answer."""
+
+    class Meta:
+        """Restricted quiz question serializer meta class."""
+        model = QuizQuestion
+        fields = ['id', 'quiz', 'question', 'options']
+
+
+class CreateQuizQuestionSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for creating a lesson quiz question."""
+    quiz_id = serializers.PrimaryKeyRelatedField(queryset=Quiz.objects.all())  # pylint: disable=no-member
+
+    class Meta:
+        """Meta class for the lesson quiz question serializer."""
+        model = QuizQuestion
+        fields = ['id', 'quiz_id', 'question', 'options', 'correct_index']
+
+
 class QuizProgressSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for the lesson quiz progress model."""
 
     class Meta:
         """Meta class for the lesson quiz progress serializer."""
         model = QuizProgress
-        fields = [
-            'id', 'quiz', 'student', 'score', 'is_completed', 'started_at',
-            'completed_at'
-        ]
+        fields = '__all__'

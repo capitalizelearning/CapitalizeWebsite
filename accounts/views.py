@@ -6,17 +6,16 @@ import re
 
 from django.contrib.auth.models import User
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt import authentication
 
 from accounts.models import UserSerializer, WaitingList, WaitListSerializer
 
 
 class ProfileView(APIView):
     """Profile view."""
-    authentication_classes = [authentication.JWTAuthentication]
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
     def get(self, request):
         """Returns the user's profile information."""
@@ -26,6 +25,7 @@ class ProfileView(APIView):
 
 class WaitListView(APIView):
     """Wait-list view."""
+    permission_classes = [AllowAny]
 
     def post(self, request):
         """Adds a user to the wait-list"""
@@ -44,6 +44,9 @@ class WaitListView(APIView):
         return Response({"message": "You have been added to the wait-list"},
                         status=status.HTTP_201_CREATED)
 
+class AdminWaitListView(APIView):
+    """Admin wait-list view. Requires staff permissions."""
+    
     def get(self, request):
         """Returns the wait-list"""
         if not request.user.is_staff:

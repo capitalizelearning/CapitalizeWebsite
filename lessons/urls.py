@@ -1,28 +1,45 @@
-"""`lessons` App URL Configuration
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/4.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
+"""`lessons` App URL Configuration"""
 from django.urls import path
 
 import lessons.views as lessons_views
 
 urlpatterns = [
-    path('lessons/', lessons_views.ContentView.as_view(), name='content'),
-    path('lessons/quiz/<int:pk>',
-         lessons_views.QuizOverview.as_view(),
-         name='quiz_overview'),
-    path('lessons/quiz/<int:quiz_pk>/<int:question_pk>',
+    path("",
+         lessons_views.ContentView.as_view({
+             "get": "list",
+             "post": "create"
+         }),
+         name="content-root"),
+    path("<int:content_id>/",
+         lessons_views.ContentView.as_view({
+             "get": "retrieve",
+             "put": "update",
+             "delete": "destroy"
+         }),
+         name="content-detail"),
+    path("<int:content_id>/quizzes/",
+         lessons_views.LessonQuizzes.as_view({
+             "get": "list",
+             "post": "create"
+         }),
+         name="content-quizzes"),
+    path("<int:content_id>/quizzes/<int:quiz_id>/",
+         lessons_views.LessonQuizzes.as_view({
+             "get": "retrieve",
+         }),
+         name="content-quiz-detail"),
+    path("quizzes/manage/<int:quiz_id>/",
+         lessons_views.ManageQuizzesView.as_view({
+             "get": "list",
+             "post": "create"
+         }),
+         name="quiz-questions"),
+    path("quizzes/manage/<int:quiz_id>/<int:question_id>/",
+         lessons_views.ManageQuizzesView.as_view({
+             "get": "retrieve",
+         }),
+         name="quiz-question-detail"),
+    path("quizzes/<int:quiz_id>/<int:question_id>/",
          lessons_views.StudentQuizView.as_view(),
-         name='student_quiz'),
+         name="student-quiz-detail"),
 ]

@@ -46,4 +46,4 @@ urlpatterns = [
     path('v1/lessons/', include('lessons.urls')),
 ]
 
-urlpatterns = format_suffix_patterns(urlpatterns)
+# urlpatterns = format_suffix_patterns(urlpatterns)
