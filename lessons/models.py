@@ -1,7 +1,14 @@
-from enum import Enum
+"""
+    Lesson models.
+    Contains the models and serializer for lesson content and quizzes.
+"""
 
-from django.core import serializers
+import json
+from enum import Enum
+from typing import List
+
 from django.db import models
+from rest_framework import serializers
 
 from accounts.models import Class, User
 
@@ -31,11 +38,17 @@ class Content(models.Model):
     def __str__(self):
         return f"<Content: {self.title}>"  # pylint: disable=no-member
 
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class ContentSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the lesson content model."""
+
+    class Meta:
+        """Meta class for the lesson content serializer."""
+        model = Content
+        fields = [
+            'id', 'title', 'description', 'content_uri', 'content_type',
+            'created_at', 'updated_at'
+        ]
 
 
 class Quiz(models.Model):
@@ -43,19 +56,22 @@ class Quiz(models.Model):
         Represents a lesson quiz."""
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=100)
-    class_id = models.ForeignKey(Class, on_delete=models.CASCADE)
+    class_id = models.ForeignKey(Class,
+                                 on_delete=models.CASCADE,
+                                 null=True,
+                                 blank=True)
+    content_id = models.ForeignKey(Content, on_delete=models.CASCADE)
     owner_id = models.ForeignKey(User, on_delete=models.CASCADE)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def questions(self):
+        """Returns the quiz questions."""
+        return QuizQuestion.objects.filter(quiz=self)  # pylint: disable=no-member
+
     def __str__(self):
         return f"<Quiz: {self.title}>"  # pylint: disable=no-member
-
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
 
 
 class QuizQuestion(models.Model):
@@ -71,11 +87,40 @@ class QuizQuestion(models.Model):
     def __str__(self):
         return f"<QuizQuestion: {self.question}>"  # pylint: disable=no-member
 
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+    def dump_options(self, options: List[str]):
+        """Dumps the options list to a JSON field."""
+        self.options = json.dumps(options)
+
+    def check_answer(self, answer: int) -> bool:
+        """Checks if the answer is correct."""
+        print(answer, self.options[self.correct_index])
+        return answer == self.correct_index
+
+
+class QuizQuestionSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the lesson quiz question model."""
+
+    class Meta:
+        """Meta class for the lesson quiz question serializer."""
+        model = QuizQuestion
+        fields = ['id', 'question', 'options', 'created_at']
+
+
+class QuizSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the lesson quiz model."""
+    content_id = serializers.PrimaryKeyRelatedField(
+        queryset=Content.objects.all())  # pylint: disable=no-member
+    owner_id = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())  # pylint: disable=no-member
+    class_id = serializers.PrimaryKeyRelatedField(queryset=Class.objects.all())  # pylint: disable=no-member
+    questions = QuizQuestionSerializer(many=True, read_only=True)
+
+    class Meta:
+        """Meta class for the lesson quiz serializer."""
+        model = Quiz
+        fields = [
+            'id', 'title', 'class_id', 'content_id', 'owner_id', 'description',
+            'questions', 'created_at'
+        ]
 
 
 class QuizProgress(models.Model):
@@ -92,8 +137,14 @@ class QuizProgress(models.Model):
     def __str__(self):
         return f"<QuizProgress: {self.student.username} in {self.quiz.title}>"  # pylint: disable=no-member
 
-    def serialize(self, output_format: str = 'json'):
-        """Serialize the model instance to the specified format."""
-        if output_format not in ['json', 'xml']:
-            raise ValueError(f"Unsupported output format: {output_format}")
-        return serializers.serialize(output_format, [self])
+
+class QuizProgressSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the lesson quiz progress model."""
+
+    class Meta:
+        """Meta class for the lesson quiz progress serializer."""
+        model = QuizProgress
+        fields = [
+            'id', 'quiz', 'student', 'score', 'is_completed', 'started_at',
+            'completed_at'
+        ]

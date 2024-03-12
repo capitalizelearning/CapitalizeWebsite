@@ -43,6 +43,7 @@ urlpatterns = [
          schema_view.with_ui('redoc'),
          name='schema-redoc'),
     path('v1/auth/', include(accounts_urls)),
+    path('v1/lessons/', include('lessons.urls')),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

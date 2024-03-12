@@ -17,7 +17,6 @@ from accounts.models import UserSerializer, WaitingList, WaitListSerializer
 class ProfileView(APIView):
     """Profile view."""
     authentication_classes = [authentication.JWTAuthentication]
-    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         """Returns the user's profile information."""
