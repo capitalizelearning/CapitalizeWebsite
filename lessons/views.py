@@ -149,7 +149,7 @@ class ManageQuizzesView(ViewSet):
                                               'request': request
                                           }).data)
 
-    def retrieve(self, request, quiz_id: int, question_id: int): # pylint: disable=unused-argument
+    def retrieve(self, request, quiz_id: int, question_id: int):  # pylint: disable=unused-argument
         """Returns the question."""
         question = models.QuizQuestion.objects.filter(id=question_id).first()  # pylint: disable=no-member
         if not question:

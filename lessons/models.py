@@ -36,6 +36,15 @@ class Content(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def quiz_id_list(self):
+        """Returns the list of quiz ids for the content."""
+        return [quiz.id for quiz in self.quiz_set.all()]  # pylint: disable=no-member
+
+    def get_quiz_list(self):
+        """Returns the list of quizzes for the content."""
+        return set(self.quiz_id_list)  # pylint: disable=no-member
+
     def __str__(self):
         return f"<Content: {self.title}>"  # pylint: disable=no-member
 
@@ -108,17 +117,20 @@ class ContentSerializer(serializers.ModelSerializer):
     class Meta:
         """Content serializer meta class."""
         model = Content
-        fields = '__all__'
+        fields = [
+            'id', 'title', 'description', 'content_uri', 'content_type', 'created_at', 'updated_at', 'quiz_id_list'
+        ]
 
 
 class QuizSerializer(serializers.ModelSerializer):
     """Serializer for the lesson quiz model."""
-    
+
     def get_question_list(self, obj):
         """Returns the list of questions for the quiz."""
         return RestrictedQuizQuestionSerializer(obj.questions, many=True).data
-    
+
     question_list = serializers.SerializerMethodField()
+
     class Meta:
         """Quiz serializer meta class."""
         model = Quiz
