@@ -45,10 +45,10 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.staticfiles',  # required for serving swagger ui's css/js files
-    'drf_yasg',
     'django.contrib.messages',
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_spectacular',
     'corsheaders',
     'website',
     'accounts',
@@ -84,11 +84,25 @@ TEMPLATES = [
     },
 ]
 
+TEMPLATE_LOADERS = ('django.template.loaders.eggs.Loader', )
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES':
     ('rest_framework_simplejwt.authentication.JWTAuthentication', ),
     'DEFAULT_PERMISSION_CLASSES':
     ('rest_framework.permissions.IsAuthenticated', ),
+    'DEFAULT_SCHEMA_CLASS':
+    'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Capitalize API',
+    'DESCRIPTION': 'API documentation for the Capitalize application',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+    },
 }
 
 SIMPLE_JWT = {

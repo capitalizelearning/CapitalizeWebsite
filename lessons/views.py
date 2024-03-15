@@ -3,28 +3,24 @@
     This module contains the views for the lessons app. 
 """
 
+from django.db import IntegrityError
 from rest_framework import exceptions, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import ViewSet
 
 from lessons import models
 
 
-class ContentView(ViewSet):
-    """Lesson content view
-
-    - `list`: /v1/lessons/
-    - `create`: /v1/lessons/
-    - `retrieve`: /v1/lessons/<int:content_id>/
-    - `update`: /v1/lessons/<int:content_id>/
-    - `destroy`: /v1/lessons/<int:content_id>/
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def lessons_root(request):
+    """List or create create lesson content.
+    
+    * `GET`: Returns the list of all lesson content.
+    * `POST`: Creates new content. Requires staff permissions.
     """
-    permission_classes = [IsAuthenticated]
-
-    def list(self, request):
-        """Returns the list of all lesson content."""
+    if request.method == 'GET':
         content = models.Content.objects.all()  # pylint: disable=no-member
         return Response(
             models.ContentSerializer(content,
@@ -32,9 +28,7 @@ class ContentView(ViewSet):
                                      context={
                                          'request': request
                                      }).data)
-
-    def create(self, request):
-        """Creates new content. Requires staff permissions."""
+    if request.method == 'POST':
         if request.user.is_staff:
             content = models.ContentSerializer(data=request.data)
             if content.is_valid():
@@ -43,24 +37,28 @@ class ContentView(ViewSet):
             return Response(content.errors, status=status.HTTP_400_BAD_REQUEST)
         raise exceptions.PermissionDenied(
             "You do not have permission to perform this action.")
+    raise exceptions.MethodNotAllowed(request.method)
 
-    def retrieve(self, request, content_id: int):
-        """Returns the content by id."""
-        content = models.Content.objects.filter(id=content_id).first()  # pylint: disable=no-member
-        if not content:
-            raise exceptions.NotFound("The requested content does not exist.")
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def lessons_detail(request, content_id: int):
+    """/v1/lessons/<int:content_id>/
+    
+    * `GET`: Returns the content by id.
+    * `PUT`: Updates content. Requires staff permissions.
+    * `DELETE`: Deletes content. Requires staff permissions.
+    """
+    content = models.Content.objects.filter(id=content_id).first()  # pylint: disable=no-member
+    if not content:
+        raise exceptions.NotFound("The requested content does not exist.")
+    if request.method == 'GET':
         return Response(
             models.ContentSerializer(content, context={
                 'request': request
             }).data)
-
-    def update(self, request, content_id: int):
-        """Updates content. Requires staff permissions."""
+    if request.method == 'PUT':
         if request.user.is_staff:
-            content = models.Content.objects.filter(id=content_id).first()  # pylint: disable=no-member
-            if not content:
-                raise exceptions.NotFound(
-                    "The requested content does not exist.")
             content = models.ContentSerializer(content, data=request.data)
             if content.is_valid():
                 content.save()
@@ -68,31 +66,27 @@ class ContentView(ViewSet):
             raise exceptions.ValidationError(content.errors)
         raise exceptions.PermissionDenied(
             "You do not have permission to perform this action.")
-
-    def destroy(self, request, content_id: int):
-        """Deletes content. Requires staff permissions."""
+    if request.method == 'DELETE':
         if request.user.is_staff:
-            content = models.Content.objects.filter(id=content_id).first()  # pylint: disable=no-member
-            if not content:
-                raise exceptions.NotFound(
-                    "The requested content does not exist.")
             content.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         raise exceptions.PermissionDenied(
             "You do not have permission to perform this action.")
+    raise exceptions.MethodNotAllowed(request.method)
 
 
-class LessonQuizzes(ViewSet):
-    """Lesson quizzes view
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def lessons_detail_quizzes(request, content_id: int):
+    """List or create quizzes for a content.
     
-    - `list`: /v1/lessons/<int:content_id>/quizzes/
-    - `create`: /v1/lessons/<int:content_id>/quizzes/
-    - `retrieve`: Returns the quiz overview by id.
+    * `GET`: Returns the list of quizzes for a content.
+    * `POST`: Creates a new quiz. Requires staff permissions.
     """
-    permission_classes = [IsAuthenticated]
-
-    def list(self, request, content_id: int):
-        """Returns the list of quizzes for a content."""
+    content = models.Content.objects.filter(id=content_id).first()  # pylint: disable=no-member
+    if not content:
+        raise exceptions.NotFound("The requested content does not exist.")
+    if request.method == 'GET':
         quizzes = models.Quiz.objects.filter(content_id=content_id)  # pylint: disable=no-member
         return Response(
             models.QuizSerializer(quizzes,
@@ -100,9 +94,7 @@ class LessonQuizzes(ViewSet):
                                   context={
                                       'request': request
                                   }).data)
-
-    def create(self, request, content_id: int):
-        """Creates a new quiz. Requires staff permissions."""
+    if request.method == 'POST':
         if request.user.is_staff:
             quiz = models.QuizSerializer(
                 data={
@@ -115,90 +107,103 @@ class LessonQuizzes(ViewSet):
         raise exceptions.PermissionDenied(
             "You do not have permission to perform this action.")
 
-    def retrieve(self, request, content_id: int, quiz_id: int):
-        """Returns the quiz overview by id."""
-        # pylint: disable=no-member
-        quiz = models.Quiz.objects.filter(id=quiz_id,
-                                          content_id=content_id).first()
-        if not quiz:
-            raise exceptions.NotFound("The requested quiz does not exist.")
+
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAdminUser])
+def manage_quizzes(request, quiz_id: int):
+    """Retrieve, update or delete a quiz. 
+    
+    Requires staff permissions.
+    
+    * `GET`: Returns the quiz by id.
+    * `PUT`: Updates a quiz.
+    * `DELETE`: Deletes a quiz.
+    """
+    quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
+    if not quiz:
+        raise exceptions.NotFound("The requested quiz does not exist.")
+    if request.method == 'GET':
         return Response(
             models.QuizSerializer(quiz, context={
                 'request': request
             }).data)
+    if request.method == 'PUT':
+        quiz = models.QuizSerializer(quiz, data=request.data)
+        if quiz.is_valid():
+            quiz.save()
+            return Response(quiz.data, status=status.HTTP_200_OK)
+        raise exceptions.ValidationError(quiz.errors)
+    if request.method == 'DELETE':
+        quiz.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    raise exceptions.MethodNotAllowed(request.method)
 
 
-class ManageQuizzesView(ViewSet):
-    """Quiz view for staff. 
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([IsAdminUser])
+def manage_quiz_question(request, quiz_id: int, question_id: int):
+    """Retrieve, update or delete a question.
     
-    - `list`: /v1/lessons/quizzes/{quiz_id}/
-    - `create`: /v1/lessons/quizzes/{quiz_id}/{question_id}/
-    - `retrieve`: /v1/lessons/quizzes/{quiz_id}/{question_id}/
+    Requires staff permissions.
+    
+    * `GET`: Returns the question by id with correct answer.
+    * `PUT`: Updates a question.
+    * `DELETE`: Deletes a question.
     """
-    permission_classes = [IsAdminUser]
-
-    def list(self, request, quiz_id: int):
-        """Returns the list of questions for a quiz."""
-        questions = models.QuizQuestion.objects.filter(quiz=quiz_id)  # pylint: disable=no-member
-        if not questions:
-            raise exceptions.NotFound("The requested quiz does not exist.")
-        return Response(
-            models.QuizQuestionSerializer(questions,
-                                          many=True,
-                                          context={
-                                              'request': request
-                                          }).data)
-
-    def retrieve(self, request, quiz_id: int, question_id: int):  # pylint: disable=unused-argument
-        """Returns the question."""
-        question = models.QuizQuestion.objects.filter(id=question_id).first()  # pylint: disable=no-member
-        if not question:
-            raise exceptions.NotFound("The requested question does not exist.")
-        return Response(
-            models.QuizQuestionSerializer(question,
-                                          context={
-                                              'request': request
-                                          }).data)
-
-    def create(self, request, quiz_id: int):
-        """Creates a new question for a quiz."""
-        quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
-        if not quiz:
-            raise exceptions.NotFound("The requested quiz does not exist.")
-        question = models.CreateQuizQuestionSerializer(data=request.data)
+    question = models.QuizQuestion.objects.filter(id=question_id).first()  # pylint: disable=no-member
+    if not question:
+        raise exceptions.NotFound("The requested question does not exist.")
+    if question.quiz != quiz_id:
+        raise exceptions.NotFound("The requested question does not exist.")
+    if request.method == 'GET':
+        return Response(models.QuizQuestionSerializer(question).data)
+    if request.method == 'PUT':
+        question = models.QuizQuestionSerializer(question, data=request.data)
         if question.is_valid():
             question.save()
-            return Response(question.data, status=status.HTTP_201_CREATED)
+            return Response(question.data, status=status.HTTP_200_OK)
         raise exceptions.ValidationError(question.errors)
+    if request.method == 'DELETE':
+        question.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    raise exceptions.MethodNotAllowed(request.method)
 
 
-class StudentQuizView(APIView):
-    """Quiz view for students. 
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def student_quiz_detail(request, quiz_id: int, question_id: int):
+    """Retrieve or submit a question.
     
-    - `get`: /v1/lessons/<int:content_id>/quizzes/<int:quiz_id>/questions/<int:question_id>/
-    - `post`: /v1/lessons/<int:content_id>/quizzes/<int:quiz_id>/questions/<int:question_id>/
+    * `GET`: Returns the question by id with correct answer excluded.
+    * `POST`: Submits an answer to a question.
     """
-    permission_classes = [IsAuthenticated]
-
-    def get(self, request, quiz_id: int, question_id: int):  # pylint: disable=unused-argument
-        """Returns the question."""
-        quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
-        if not quiz:
-            raise exceptions.NotFound("The requested quiz does not exist.")
-        question = models.QuizQuestion.objects.filter(id=question_id).first()  # pylint: disable=no-member
-        if not question:
-            raise exceptions.NotFound("The requested question does not exist.")
+    quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
+    if not quiz:
+        raise exceptions.NotFound("The requested quiz does not exist.")
+    question = quiz.questions.filter(id=question_id).first()  # pylint: disable=no-member
+    if not question:
+        raise exceptions.NotFound("The requested question does not exist.")
+    if request.method == 'GET':
         return Response(models.RestrictedQuizQuestionSerializer(question).data)
-
-    def post(self, request, quiz_id: int, question_id: int):
-        """Check the answer to a question."""
-        quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
-        if not quiz:
-            raise exceptions.NotFound("The requested quiz does not exist.")
-        question = models.QuizQuestion.objects.filter(id=question_id).first()  # pylint: disable=no-member
-        if not question:
-            raise exceptions.NotFound("The requested question does not exist.")
-        choice = request.data.get('answer')
-        if not choice:
-            raise exceptions.ValidationError("Answer not provided")
-        return Response({"isCorrect": question.check_answer(int(choice))})
+    if request.method == 'POST':
+        selected_answer = request.data.get('response')
+        if not selected_answer:
+            raise exceptions.ValidationError(
+                "The response field is required to submit an answer.")
+        is_correct = question.check_answer(selected_answer)
+        try:
+            response = models.QuizResponse(quiz=quiz,
+                                           question=question,
+                                           score=int(is_correct *
+                                                     question.weight),
+                                           student=request.user)
+            response.save()
+        except IntegrityError as ie:
+            raise exceptions.ValidationError(
+                "You have already submitted a response to this question."
+            ) from ie
+        except Exception as e:
+            raise exceptions.APIException(
+                "An error occurred while processing your request.") from e
+        return Response({'is_correct': is_correct, 'score': response.score})
+    raise exceptions.MethodNotAllowed(request.method)

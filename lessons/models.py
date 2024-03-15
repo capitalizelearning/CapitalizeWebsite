@@ -78,6 +78,7 @@ class QuizQuestion(models.Model):
     id = models.AutoField(primary_key=True)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
     question = models.TextField()
+    weight = models.IntegerField(null=False, default=1)
     options = models.JSONField()
     correct_index = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -91,23 +92,26 @@ class QuizQuestion(models.Model):
 
     def check_answer(self, answer: int) -> bool:
         """Checks if the answer is correct."""
-        print(answer, self.options[self.correct_index])
         return answer == self.correct_index
 
 
-class QuizProgress(models.Model):
-    """Quiz progress model.
-        Represents a student's progress in a lesson quiz."""
+class QuizResponse(models.Model):
+    """Quiz response model.
+        Represents a student's response to a quiz question."""
     id = models.AutoField(primary_key=True)
     quiz = models.ForeignKey(Quiz, on_delete=models.CASCADE)
+    question = models.ForeignKey(QuizQuestion, on_delete=models.CASCADE)
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField()
-    is_completed = models.BooleanField(default=False)
-    started_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    responses = models.ManyToManyField(QuizQuestion, related_name='responses')
 
     def __str__(self):
-        return f"<QuizProgress: {self.student.username} in {self.quiz.title}>"  # pylint: disable=no-member
+        return f"<QuizResponse: {self.id}>"  # pylint: disable=no-member
+
+    class Meta:
+        """Constrain the QuizResponse to be unique for each student, quiz and question."""
+        unique_together = ['quiz', 'question', 'student']
 
 
 # Serializers Definitions
@@ -118,7 +122,8 @@ class ContentSerializer(serializers.ModelSerializer):
         """Content serializer meta class."""
         model = Content
         fields = [
-            'id', 'title', 'description', 'content_uri', 'content_type', 'created_at', 'updated_at', 'quiz_id_list'
+            'id', 'title', 'description', 'content_uri', 'content_type',
+            'created_at', 'updated_at', 'quiz_id_list'
         ]
 
 
@@ -140,10 +145,19 @@ class QuizSerializer(serializers.ModelSerializer):
 class QuizQuestionSerializer(serializers.ModelSerializer):
     """Serializer for the lesson quiz question model. Includes the correct answer."""
 
+    def get_responses(self, obj):
+        """Returns the list of responses for the question."""
+        return [response.id for response in obj.responses.all()]  # pylint: disable=no-member
+
+    responses = serializers.SerializerMethodField()
+
     class Meta:
         """Quiz question serializer meta class."""
         model = QuizQuestion
-        fields = '__all__'
+        fields = [
+            'id', 'quiz', 'question', 'options', 'weight', 'correct_index',
+            'responses'
+        ]
 
 
 class RestrictedQuizQuestionSerializer(serializers.ModelSerializer):
@@ -152,7 +166,7 @@ class RestrictedQuizQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         """Restricted quiz question serializer meta class."""
         model = QuizQuestion
-        fields = ['id', 'quiz', 'question', 'options']
+        fields = ['id', 'quiz', 'question', 'options', 'weight']
 
 
 class CreateQuizQuestionSerializer(serializers.HyperlinkedModelSerializer):
@@ -165,10 +179,10 @@ class CreateQuizQuestionSerializer(serializers.HyperlinkedModelSerializer):
         fields = ['id', 'quiz_id', 'question', 'options', 'correct_index']
 
 
-class QuizProgressSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the lesson quiz progress model."""
+class QuizResponseSerializer(serializers.ModelSerializer):
+    """Serializer for the lesson quiz response model."""
 
     class Meta:
-        """Meta class for the lesson quiz progress serializer."""
-        model = QuizProgress
+        """Quiz response serializer meta class."""
+        model = QuizResponse
         fields = '__all__'
