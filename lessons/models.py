@@ -71,6 +71,29 @@ class Quiz(models.Model):
     def __str__(self):
         return f"<Quiz: {self.title}>"  # pylint: disable=no-member
 
+    def is_completed_by(self, student: User) -> bool:
+        """Checks if the quiz is completed by the student."""
+        questions = self.questions
+        # pylint: disable=no-member
+        responses = QuizResponse.objects.filter(quiz=self, student=student)
+        return len(responses) == len(questions)
+
+    def score(self, student: User) -> int:
+        """Returns the total score for the student."""
+        if not self.is_completed_by(student):
+            return None
+        total_score = 0
+        total_weight = 0
+        for question in self.questions:
+            # pylint: disable=no-member
+            response = QuizResponse.objects.filter(quiz=self,
+                                                   student=student,
+                                                   question=question).first()
+            if response:
+                total_score += response.score
+                total_weight += question.weight
+        return total_score / total_weight * 100
+
 
 class QuizQuestion(models.Model):
     """Quiz question model.
@@ -133,9 +156,25 @@ class QuizSerializer(serializers.ModelSerializer):
 
     def get_question_list(self, obj):
         """Returns the list of questions for the quiz."""
-        return RestrictedQuizQuestionSerializer(obj.questions, many=True).data
+        return RestrictedQuizQuestionSerializer(obj.questions,
+                                                many=True,
+                                                context=self.context).data
+
+    def get_is_completed(self, obj):
+        """Returns True if the quiz is completed by the student."""
+        if 'request' not in self.context:
+            raise ValueError("Request context is required.")
+        return obj.is_completed_by(self.context['request'].user)
+
+    def get_score(self, obj):
+        """Returns the score from the quiz response, if any."""
+        if 'request' not in self.context:
+            raise ValueError("Request context is required.")
+        return obj.score(self.context['request'].user)
 
     question_list = serializers.SerializerMethodField()
+    is_completed = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
 
     class Meta:
         """Quiz serializer meta class."""

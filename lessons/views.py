@@ -109,6 +109,20 @@ def lessons_detail_quizzes(request, content_id: int):
     raise exceptions.MethodNotAllowed(request.method)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def quizzes_root(request):
+    """List all quizzes.
+    
+    * `GET`: Returns the list of all quizzes.
+    """
+    quizzes = models.Quiz.objects.all()  # pylint: disable=no-member
+    return Response(
+        models.QuizSerializer(quizzes, many=True, context={
+            'request': request
+        }).data)
+
+
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([IsAdminUser])
 def manage_quizzes(request, quiz_id: int):
@@ -180,7 +194,7 @@ def student_quiz_questions(request, quiz_id: int):
     quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
     if not quiz:
         raise exceptions.NotFound("The requested quiz does not exist.")
-    questions = quiz.questions.all()  
+    questions = quiz.questions.all()
     for question in questions:
         # pylint: disable=no-member
         response = models.QuizResponse.objects.filter(
