@@ -80,6 +80,8 @@ class QuizQuestion(models.Model):
     question = models.TextField()
     weight = models.IntegerField(null=False, default=1)
     options = models.JSONField()
+    responses = models.ManyToManyField('QuizResponse',
+                                       related_name='question_responses')
     correct_index = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -104,10 +106,9 @@ class QuizResponse(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     score = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
-    responses = models.ManyToManyField(QuizQuestion, related_name='responses')
 
     def __str__(self):
-        return f"<QuizResponse: {self.id}>"  # pylint: disable=no-member
+        return f"<QuizResponse: {self.question.question} - {self.student.username}>"  # pylint: disable=no-member
 
     class Meta:
         """Constrain the QuizResponse to be unique for each student, quiz and question."""
@@ -162,11 +163,21 @@ class QuizQuestionSerializer(serializers.ModelSerializer):
 
 class RestrictedQuizQuestionSerializer(serializers.ModelSerializer):
     """Serializer for the lesson quiz question model. Excludes the correct answer."""
+    score = serializers.SerializerMethodField()
+
+    def get_score(self, obj):
+        """Returns the score from the quiz response, if any."""
+        # pylint: disable=no-member
+        response = QuizResponse.objects.filter(
+            question=obj, student=self.context['request'].user).first()
+        if response:
+            return response.score
+        return None
 
     class Meta:
         """Restricted quiz question serializer meta class."""
         model = QuizQuestion
-        fields = ['id', 'quiz', 'question', 'options', 'weight']
+        fields = ['id', 'quiz', 'question', 'options', 'weight', 'score']
 
 
 class CreateQuizQuestionSerializer(serializers.HyperlinkedModelSerializer):

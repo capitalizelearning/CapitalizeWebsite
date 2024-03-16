@@ -10,6 +10,7 @@ urlpatterns = [
     path("manage/quizzes/<int:quiz_id>/", lessons_views.manage_quizzes),
     path("manage/quizzes/<int:quiz_id>/<int:question_id>/",
          lessons_views.manage_quiz_question),
+    path("quizzes/<int:quiz_id>/", lessons_views.student_quiz_questions),
     path("quizzes/<int:quiz_id>/<int:question_id>/",
          lessons_views.student_quiz_detail)
 ]

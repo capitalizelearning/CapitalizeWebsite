@@ -106,6 +106,7 @@ def lessons_detail_quizzes(request, content_id: int):
             raise exceptions.ValidationError(quiz.errors)
         raise exceptions.PermissionDenied(
             "You do not have permission to perform this action.")
+    raise exceptions.MethodNotAllowed(request.method)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -169,6 +170,31 @@ def manage_quiz_question(request, quiz_id: int, question_id: int):
     raise exceptions.MethodNotAllowed(request.method)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def student_quiz_questions(request, quiz_id: int):
+    """Retrieve all questions for a quiz.
+    
+    * `GET`: Returns the list of questions for a quiz.
+    """
+    quiz = models.Quiz.objects.filter(id=quiz_id).first()  # pylint: disable=no-member
+    if not quiz:
+        raise exceptions.NotFound("The requested quiz does not exist.")
+    questions = quiz.questions.all()  
+    for question in questions:
+        # pylint: disable=no-member
+        response = models.QuizResponse.objects.filter(
+            quiz=quiz, question=question, student=request.user).first()
+        if response:
+            question.response = response.score
+    return Response(
+        models.RestrictedQuizQuestionSerializer(questions,
+                                                many=True,
+                                                context={
+                                                    'request': request
+                                                }).data)
+
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def student_quiz_detail(request, quiz_id: int, question_id: int):
@@ -184,7 +210,20 @@ def student_quiz_detail(request, quiz_id: int, question_id: int):
     if not question:
         raise exceptions.NotFound("The requested question does not exist.")
     if request.method == 'GET':
-        return Response(models.RestrictedQuizQuestionSerializer(question).data)
+        # pylint: disable=no-member
+        response = models.QuizResponse.objects.filter(
+            quiz=quiz, question=question, student=request.user).first()
+        if response:
+            return Response(
+                models.QuizResponseSerializer(response,
+                                              context={
+                                                  'request': request
+                                              }).data)
+        return Response(
+            models.RestrictedQuizQuestionSerializer(question,
+                                                    context={
+                                                        'request': request
+                                                    }).data)
     if request.method == 'POST':
         selected_answer = request.data.get('response')
         if not selected_answer:
@@ -203,7 +242,14 @@ def student_quiz_detail(request, quiz_id: int, question_id: int):
                 "You have already submitted a response to this question."
             ) from ie
         except Exception as e:
+            print(e)
             raise exceptions.APIException(
                 "An error occurred while processing your request.") from e
-        return Response({'is_correct': is_correct, 'score': response.score})
+        return Response(
+            {
+                'is_correct': is_correct,
+                'score': response.score,
+                "correct_index": question.correct_index
+            },
+            status=status.HTTP_201_CREATED)
     raise exceptions.MethodNotAllowed(request.method)
