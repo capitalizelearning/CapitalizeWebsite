@@ -13,15 +13,24 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.contrib import admin
 from django.urls import include, path
-from rest_framework.urlpatterns import format_suffix_patterns
+from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
+                                   SpectacularSwaggerView)
 
 from accounts.urls import urlpatterns as accounts_urls
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
-    # path('', include('website.urls')),
+    path('admin/', admin.site.urls),
     path('v1/auth/', include(accounts_urls)),
+    path('v1/lessons/', include('lessons.urls')),
+    path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('v1/schema/swagger/',
+         SpectacularSwaggerView.as_view(url_name='schema'),
+         name='swagger-ui'),
+    path('v1/schema/redoc/',
+         SpectacularRedocView.as_view(url_name='schema'),
+         name='redoc'),
 ]
 
-urlpatterns = format_suffix_patterns(urlpatterns)
+# urlpatterns = format_suffix_patterns(urlpatterns)

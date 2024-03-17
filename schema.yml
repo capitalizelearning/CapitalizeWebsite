@@ -1,0 +1,356 @@
+openapi: 3.0.3
+info:
+  title: Capitalize API
+  version: 1.0.0
+  description: API documentation for the Capitalize application
+paths:
+  /v1/auth/admin/wait-list/:
+    get:
+      operationId: v1_auth_admin_wait_list_retrieve
+      description: Returns the wait-list
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /v1/auth/profile/:
+    get:
+      operationId: v1_auth_profile_retrieve
+      description: Returns the user's profile information.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /v1/auth/token/:
+    post:
+      operationId: v1_auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /v1/auth/token/refresh/:
+    post:
+      operationId: v1_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /v1/auth/wait-list/:
+    post:
+      operationId: v1_auth_wait_list_create
+      description: Adds a user to the wait-list
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /v1/lessons/:
+    get:
+      operationId: v1_lessons_retrieve
+      description: Returns the list of all lesson content.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_lessons_create
+      description: Creates new content. Requires staff permissions.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+  /v1/lessons/{content_id}/:
+    get:
+      operationId: v1_lessons_retrieve_2
+      description: Returns the content by id.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    put:
+      operationId: v1_lessons_update
+      description: Updates content. Requires staff permissions.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: v1_lessons_destroy
+      description: Deletes content. Requires staff permissions.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /v1/lessons/{content_id}/quizzes/:
+    get:
+      operationId: v1_lessons_quizzes_retrieve_2
+      description: Returns the list of quizzes for a content.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_lessons_quizzes_create_2
+      description: Creates a new quiz. Requires staff permissions.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+  /v1/lessons/{content_id}/quizzes/{quiz_id}/:
+    get:
+      operationId: v1_lessons_quizzes_retrieve_3
+      description: Returns the quiz overview by id.
+      parameters:
+      - in: path
+        name: content_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /v1/lessons/quizzes/{quiz_id}/{question_id}/:
+    get:
+      operationId: v1_lessons_quizzes_retrieve
+      description: Returns the question.
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_lessons_quizzes_create
+      description: Check the answer to a question.
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+  /v1/lessons/quizzes/manage/{quiz_id}/:
+    get:
+      operationId: v1_lessons_quizzes_manage_retrieve
+      description: Returns the list of questions for a quiz.
+      parameters:
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: v1_lessons_quizzes_manage_create
+      description: Creates a new question for a quiz.
+      parameters:
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: No response body
+  /v1/lessons/quizzes/manage/{quiz_id}/{question_id}/:
+    get:
+      operationId: v1_lessons_quizzes_manage_retrieve_2
+      description: Returns the question with the correct answer.
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          writeOnly: true
+      required:
+      - access
+      - refresh
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

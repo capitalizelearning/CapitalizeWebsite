@@ -20,8 +20,11 @@ from rest_framework_simplejwt.views import (TokenObtainPairView,
 from accounts import views as accounts_views
 
 urlpatterns = [
-    path('', accounts_views.ProfileView.as_view(), name='profile'),
-    path('wait-list/', accounts_views.WaitListView.as_view(), name='wait-list'),
+    path('profile/', accounts_views.ProfileView.as_view(), name='profile'),
+    path('wait-list/', accounts_views.WaitListView.as_view(),
+         name='wait-list'),
+    path('admin/wait-list/', accounts_views.AdminWaitListView.as_view(),
+         name='admin-wait-list'),
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
