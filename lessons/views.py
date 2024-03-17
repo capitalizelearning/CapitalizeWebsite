@@ -240,10 +240,10 @@ def student_quiz_detail(request, quiz_id: int, question_id: int):
                                                     }).data)
     if request.method == 'POST':
         selected_answer = request.data.get('response')
-        if not selected_answer:
+        if selected_answer is None:
             raise exceptions.ValidationError(
                 "The response field is required to submit an answer.")
-        is_correct = question.check_answer(selected_answer)
+        is_correct = question.check_answer(int(selected_answer))
         try:
             response = models.QuizResponse(quiz=quiz,
                                            question=question,
