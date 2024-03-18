@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['capitalizelearn.com', '127.0.0.1']
+ALLOWED_HOSTS = ['capitalizelearn.com', 'api.capitalizelearn.com', '127.0.0.1']
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "https://capitalizelearn.com",
@@ -40,18 +40,10 @@ CORS_ALLOWED_ORIGINS = [
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.staticfiles',  # required for serving swagger ui's css/js files
-    'django.contrib.messages',
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'drf_spectacular',
-    'corsheaders',
-    'website',
-    'accounts',
+    'django.contrib.admin', 'django.contrib.auth',
+    'django.contrib.contenttypes', 'django.contrib.sessions',
+    'django.contrib.staticfiles', 'django.contrib.messages', 'rest_framework',
+    'rest_framework_simplejwt', 'drf_spectacular', 'corsheaders', 'accounts',
     'lessons'
 ]
 
@@ -92,16 +84,31 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES':
     ('rest_framework.permissions.IsAuthenticated', ),
     'DEFAULT_SCHEMA_CLASS':
-    'drf_spectacular.openapi.AutoSchema',
+    "drf_spectacular.openapi.AutoSchema"
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'Capitalize API',
-    'DESCRIPTION': 'API documentation for the Capitalize application',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
+    'TITLE':
+    'Capitalize API',
+    'DESCRIPTION':
+    'API documentation for the Capitalize application',
+    'VERSION':
+    '1.0.0',
+    'SERVERS': [{
+        'url': 'https://api.capitalizelearn.com',
+        'description': 'Production server'
+    }],
+    'SERVE_INCLUDE_SCHEMA':
+    False,
     'SWAGGER_UI_SETTINGS': {
         'deepLinking': True,
+        'persistAuthorization': True,
+        'displayRequestDuration': True,
+        'filter': True,
+        'syntaxHighlight': {
+            'activated': True,
+            'theme': 'nord'
+        }
     },
 }
 
@@ -109,6 +116,8 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
     "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
 }
 
 WSGI_APPLICATION = 'capitalize.wsgi.application'

@@ -3,6 +3,7 @@
     Contains account related models and their serializers.
 """
 from enum import Enum
+from secrets import token_urlsafe
 
 from django.contrib.auth.models import User
 from django.db import models
@@ -41,6 +42,27 @@ class WaitingList(models.Model):
         return f"<WaitingList: {self.id}>"
 
 
+class CreateWaitingListSerializer(serializers.Serializer):
+    """Serializer for adding a user to the waiting list."""
+
+    email = serializers.EmailField()
+
+    class Meta:
+        """Meta class for the waiting list serializer."""
+        model = WaitingList
+        fields = ['id', 'email', 'date_joined']
+
+    def create(self, validated_data):
+        """Create and return a new WaitingList instance."""
+        return WaitingList.objects.create(**validated_data)  # pylint: disable=no-member
+
+    def update(self, instance, validated_data):
+        """Update and return an existing WaitingList instance."""
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+        return instance
+
+
 class WaitListSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for the waiting list model."""
 
@@ -52,6 +74,7 @@ class WaitListSerializer(serializers.HyperlinkedModelSerializer):
 
 class ProfileType(Enum):
     """Enumeration for user profile types."""
+    TESTER = 'tester'
     STUDENT = 'student'
     INSTRUCTOR = 'instructor'
     ADMIN = 'admin'
@@ -66,12 +89,85 @@ class Profile(models.Model):
                                     choices=[(tag, tag.value)
                                              for tag in ProfileType])
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    registration_token = models.CharField(max_length=255,
+                                          unique=True,
+                                          blank=True,
+                                          null=True)
     phone_number = models.CharField(max_length=15, unique=True, blank=True)
     is_2fa_enabled = models.BooleanField(default=False)
     streak_days = models.IntegerField(default=0)
 
+    def __init__(self, *args, set_token: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if set_token:
+            self.generate_registration_token()
+
     def __str__(self):
         return f"<Profile: {self.user.username}>"  # pylint: disable=no-member
+
+    def generate_registration_token(self) -> str:
+        """Generates a unique token for account activation."""
+        token = token_urlsafe(128)
+        # pylint: disable=no-member
+        while Profile.objects.filter(registration_token=token).exists():
+            token = token_urlsafe(128)
+        self.registration_token = token
+        return token
+
+    @classmethod
+    def get_user_by_activation_token(cls, token: str) -> User | None:
+        """Get the user associated with the given activation token."""
+        # pylint: disable=no-member
+        profile = cls.objects.filter(registration_token=token).first()
+        return profile.user if profile else None
+
+
+class CreateTestUserSerializer(serializers.Serializer):
+    """Serializer for creating a test user."""
+    waiting_list_id = serializers.IntegerField()
+    first_name = serializers.CharField(max_length=30, required=False)
+    last_name = serializers.CharField(max_length=150, required=False)
+
+    def create(self, validated_data):
+        """Create and return a new User instance."""
+        wl = WaitingList.objects.get(id=validated_data['waiting_list_id'])  # pylint: disable=no-member
+        if wl is None:
+            raise ValueError("Invalid waiting list id")
+        user = User.objects.create_user(
+            username=wl.email,
+            email=wl.email,
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+        )
+        profile = Profile(user=user,
+                          account_type=ProfileType.TESTER.value,
+                          set_token=True)
+        profile.save()
+        wl.is_registered = True
+        wl.save()
+        return profile
+
+    def update(self, instance, validated_data):
+        """Update and return an existing User instance."""
+        instance.first_name = validated_data.get('first_name',
+                                                 instance.first_name)
+        instance.last_name = validated_data.get('last_name',
+                                                instance.last_name)
+        instance.save()
+        return instance
+
+
+class SetTestUserPasswordSerializer(serializers.Serializer):
+    """Serializer for setting the password for a test user."""
+    password = serializers.CharField(max_length=128, min_length=8)
+
+    def create(self, validated_data):
+        """Create and return a new User instance."""
+        pass  # pylint: disable=unnecessary-pass
+
+    def update(self, instance, validated_data):
+        """Update and return an existing User instance."""
+        pass  # pylint: disable=unnecessary-pass
 
 
 class ProfileSerializer(serializers.HyperlinkedModelSerializer):

@@ -19,8 +19,10 @@ from drf_spectacular.views import (SpectacularAPIView, SpectacularRedocView,
                                    SpectacularSwaggerView)
 
 from accounts.urls import urlpatterns as accounts_urls
+from accounts.views import ApiRoot
 
 urlpatterns = [
+    path("", ApiRoot.as_view(), name="api-root"),
     path('admin/', admin.site.urls),
     path('v1/auth/', include(accounts_urls)),
     path('v1/lessons/', include('lessons.urls')),
@@ -32,5 +34,3 @@ urlpatterns = [
          SpectacularRedocView.as_view(url_name='schema'),
          name='redoc'),
 ]
-
-# urlpatterns = format_suffix_patterns(urlpatterns)
