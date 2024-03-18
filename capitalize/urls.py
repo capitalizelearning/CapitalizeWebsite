@@ -24,13 +24,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('v1/auth/', include(accounts_urls)),
     path('v1/lessons/', include('lessons.urls')),
-    path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('v1/schema/swagger/',
-         SpectacularSwaggerView.as_view(url_name='schema'),
-         name='swagger-ui'),
-    path('v1/schema/redoc/',
-         SpectacularRedocView.as_view(url_name='schema'),
-         name='redoc'),
+    # path('v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    # path('v1/schema/swagger/',
+    #      SpectacularSwaggerView.as_view(url_name='schema'),
+    #      name='swagger-ui'),
+    # path('v1/schema/redoc/',
+    #      SpectacularRedocView.as_view(url_name='schema'),
+    #      name='redoc'),
 ]
 
 # urlpatterns = format_suffix_patterns(urlpatterns)
