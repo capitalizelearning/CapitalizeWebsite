@@ -139,16 +139,58 @@ class QuizResponse(models.Model):
 
 
 # Serializers Definitions
+class ContentTypeSerializer(serializers.Serializer):
+    """Serializer for the lesson content type."""
+    value = serializers.CharField(max_length=10)
+
+    def create(self, validated_data):
+        """overrides the create method."""
+        return ContentFormat(validated_data['value'])
+
+    def update(self, instance, validated_data):
+        """overrides the update method."""
+        instance.value = validated_data['value']
+        return instance
+
+    def to_representation(self, instance):
+        """Returns the content type value."""
+        return instance.value
+
+    def to_internal_value(self, data):
+        """Returns the content type value."""
+        return ContentFormat(data)
+
+
+class CreateContentSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for creating a lesson content."""
+    content_type = ContentTypeSerializer()
+
+    class Meta:
+        """Create content serializer meta class."""
+        model = Content
+        fields = ['id', 'title', 'description', 'content_uri', 'content_type']
+
+
 class ContentSerializer(serializers.ModelSerializer):
     """Serializer for the lesson content model."""
+
+    content_type = ContentTypeSerializer()
 
     class Meta:
         """Content serializer meta class."""
         model = Content
-        fields = [
-            'id', 'title', 'description', 'content_uri', 'content_type',
-            'created_at', 'updated_at', 'quiz_id_list'
-        ]
+        fields = '__all__'
+
+
+class CreateQuizSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for creating a lesson quiz."""
+    content_id = serializers.PrimaryKeyRelatedField(
+        queryset=Content.objects.all())  # pylint: disable=no-member
+
+    class Meta:
+        """Create quiz serializer meta class."""
+        model = Quiz
+        fields = ['id', 'title', 'class_id', 'content_id', 'description']
 
 
 class QuizSerializer(serializers.ModelSerializer):

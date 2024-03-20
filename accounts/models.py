@@ -157,6 +157,18 @@ class CreateTestUserSerializer(serializers.Serializer):
         return instance
 
 
+class RegistrationTokenSerializer(serializers.Serializer):
+    """Serializer for the registration token."""
+    registration_token = serializers.CharField(max_length=255)
+
+    def create(self, validated_data):
+        """Create and return a new User instance."""
+        pass  # pylint: disable=unnecessary-pass
+
+    def update(self, instance, validated_data):
+        """Update and return an existing User instance."""
+        pass  # pylint: disable=unnecessary-pass
+
 class SetTestUserPasswordSerializer(serializers.Serializer):
     """Serializer for setting the password for a test user."""
     password = serializers.CharField(max_length=128, min_length=8)

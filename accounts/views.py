@@ -28,6 +28,7 @@ class ApiRoot(APIView):
 class ProfileView(APIView):
     """Profile view."""
     permission_classes = [IsAuthenticated, IsAdminUser]
+    serializer_class = models.UserSerializer
 
     def get(self, request):
         """Returns the user's profile information."""
@@ -38,24 +39,26 @@ class ProfileView(APIView):
 class WaitListView(APIView):
     """Wait-list view."""
     permission_classes = [AllowAny]
+    serializer_class = models.WaitListSerializer
 
+    @extend_schema(request=models.CreateWaitingListSerializer,
+                   responses={200: models.WaitListSerializer(many=True)})
     def post(self, request):
         """Adds a user to the wait-list"""
         email: str = request.data.get('email')
         if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
-            return Response({"error": "Please provide a valid email address"},
-                            status=status.HTTP_400_BAD_REQUEST)
+            raise exceptions.ValidationError("Invalid email address")
 
         # Check if user is already in the wait-list
         user = models.WaitingList.objects.filter(email=email).first()  # pylint: disable=no-member
         if user is not None:
-            return Response({"message": "You are already in the wait-list"},
-                            status=status.HTTP_200_OK)
+            return Response({"message": "You are already on the wait-list"},
+                            status=status.HTTP_400_BAD_REQUEST)
         models.WaitingList.objects.create(email=email)  # pylint: disable=no-member
 
-        return Response({"message": "You have been added to the wait-list"},
-                        status=status.HTTP_201_CREATED)
+        return Response(WaitListView.get(self, request).data)
 
+    @extend_schema(responses={200: models.WaitListSerializer(many=True)})
     def get(self, request):
         """Returns the wait-list."""
         if request.user.is_staff:
@@ -69,6 +72,7 @@ class WaitListView(APIView):
 class CreateTestUserView(APIView):
     """Converts a wait-list member to a test user"""
     permission_classes = [IsAdminUser]
+    serializer_class = models.RegistrationTokenSerializer
 
     @extend_schema(request=models.CreateTestUserSerializer)
     def post(self, request):
@@ -85,6 +89,7 @@ class CreateTestUserView(APIView):
 class SetTestUserPassword(APIView):
     """Sets the password for a test user"""
     permission_classes = [AllowAny]
+    serializer = models.SetTestUserPasswordSerializer
 
     @extend_schema(request=models.SetTestUserPasswordSerializer,
                    responses={200: None})
