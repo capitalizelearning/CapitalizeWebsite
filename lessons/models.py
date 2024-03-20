@@ -149,12 +149,11 @@ class ContentTypeSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         """overrides the update method."""
-        instance.value = validated_data['value']
-        return instance
+        return ContentFormat(validated_data['value'])
 
     def to_representation(self, instance):
         """Returns the content type value."""
-        return instance.value
+        return instance
 
     def to_internal_value(self, data):
         """Returns the content type value."""

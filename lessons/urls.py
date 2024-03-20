@@ -13,7 +13,7 @@ urlpatterns = [
          lessons_views.ManageQuizzes.as_view()),
     path("manage/quizzes/<int:quiz_id>/<int:question_id>/",
          lessons_views.ManageQuizzes.as_view()),
-    path("quizzes/<int:quiz_id>/", lessons_views.StudentQuizDetail.as_view()),
+    path("quizzes/<int:quiz_id>/", lessons_views.StudentQuizQuestions.as_view()),
     path("quizzes/<int:quiz_id>/<int:question_id>/",
          lessons_views.StudentQuizDetail.as_view()),
 ]
