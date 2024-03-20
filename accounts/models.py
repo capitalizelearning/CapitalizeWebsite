@@ -10,25 +10,6 @@ from django.db import models
 from rest_framework import serializers
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the user model."""
-
-    profile = serializers.HyperlinkedRelatedField(view_name='profile-detail',
-                                                  read_only=True)
-    preferences = serializers.HyperlinkedRelatedField(
-        view_name='preferences-detail', read_only=True)
-    enrollment = serializers.HyperlinkedRelatedField(
-        view_name='enrollment-detail', read_only=True)
-
-    class Meta:
-        """Meta class for the user serializer."""
-        model = User
-        fields = [
-            'id', 'username', 'email', 'first_name', 'last_name', 'is_staff',
-            'is_active', 'date_joined', 'profile', 'preferences', 'enrollment'
-        ]
-
-
 class WaitingList(models.Model):
     """Waiting list model.
         Represents users who are waiting to create an account."""
@@ -85,9 +66,7 @@ class Profile(models.Model):
         Extends the default User model with additional fields through a one-to-one relationship."""
 
     id = models.AutoField(primary_key=True)
-    account_type = models.CharField(max_length=10,
-                                    choices=[(tag, tag.value)
-                                             for tag in ProfileType])
+    account_type = models.CharField(max_length=10)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     registration_token = models.CharField(max_length=255,
                                           unique=True,
@@ -121,6 +100,14 @@ class Profile(models.Model):
         profile = cls.objects.filter(registration_token=token).first()
         return profile.user if profile else None
 
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the user model."""
+
+    class Meta:
+        """Meta class for the user serializer."""
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
 class CreateTestUserSerializer(serializers.Serializer):
     """Serializer for creating a test user."""
@@ -168,6 +155,7 @@ class RegistrationTokenSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         """Update and return an existing User instance."""
         pass  # pylint: disable=unnecessary-pass
+
 
 class SetTestUserPasswordSerializer(serializers.Serializer):
     """Serializer for setting the password for a test user."""

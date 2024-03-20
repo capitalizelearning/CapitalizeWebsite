@@ -27,13 +27,16 @@ class ApiRoot(APIView):
 
 class ProfileView(APIView):
     """Profile view."""
-    permission_classes = [IsAuthenticated, IsAdminUser]
+    permission_classes = [IsAuthenticated]
     serializer_class = models.UserSerializer
 
     def get(self, request):
         """Returns the user's profile information."""
         user: User = request.user
-        return Response(models.UserSerializer(user).data)
+        return Response(
+            models.UserSerializer(user, context={
+                'request': request
+            }).data)
 
 
 class WaitListView(APIView):
