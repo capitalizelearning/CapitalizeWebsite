@@ -7,7 +7,10 @@ from secrets import token_urlsafe
 
 from django.contrib.auth.models import User
 from django.db import models
-from rest_framework import serializers
+from django.db.utils import IntegrityError
+from rest_framework import exceptions, serializers
+
+from accounts.messaging import EmailService
 
 
 class WaitingList(models.Model):
@@ -109,6 +112,7 @@ class UserSerializer(serializers.HyperlinkedModelSerializer):
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name']
 
+
 class CreateTestUserSerializer(serializers.Serializer):
     """Serializer for creating a test user."""
     waiting_list_id = serializers.IntegerField()
@@ -117,22 +121,38 @@ class CreateTestUserSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         """Create and return a new User instance."""
-        wl = WaitingList.objects.get(id=validated_data['waiting_list_id'])  # pylint: disable=no-member
+        # pylint: disable=no-member
+        wl = WaitingList.objects.get(id=validated_data['waiting_list_id'])
         if wl is None:
             raise ValueError("Invalid waiting list id")
-        user = User.objects.create_user(
-            username=wl.email,
-            email=wl.email,
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', ''),
-        )
-        profile = Profile(user=user,
-                          account_type=ProfileType.TESTER.value,
-                          set_token=True)
-        profile.save()
-        wl.is_registered = True
-        wl.save()
-        return profile
+
+        user: User = None
+        profile: Profile = None
+        try:
+            user = User.objects.create_user(
+                username=wl.email,
+                email=wl.email,
+                first_name=validated_data.get('first_name', ''),
+                last_name=validated_data.get('last_name', ''),
+            )
+            profile = Profile(user=user,
+                              account_type=ProfileType.TESTER.value,
+                              set_token=True)
+            profile.save()
+            EmailService().send_invite_email(user)
+            wl.is_registered = True
+            wl.save()
+            return profile
+        except IntegrityError as ie:
+            raise exceptions.ValidationError("User already exists") from ie
+        except Exception as e:
+            print(e)
+            if user.id:
+                user.delete()
+            if profile.id:
+                profile.delete()
+            raise exceptions.APIException(
+                "An error occurred while creating the test user") from e
 
     def update(self, instance, validated_data):
         """Update and return an existing User instance."""
