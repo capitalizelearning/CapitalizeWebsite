@@ -41,10 +41,6 @@ class Content(models.Model):
         """Returns the list of quiz ids for the content."""
         return [quiz.id for quiz in self.quiz_set.all()]  # pylint: disable=no-member
 
-    def get_quiz_list(self):
-        """Returns the list of quizzes for the content."""
-        return set(self.quiz_id_list)  # pylint: disable=no-member
-
     def __str__(self):
         return f"<Content: {self.title}>"  # pylint: disable=no-member
 
@@ -174,6 +170,12 @@ class ContentSerializer(serializers.ModelSerializer):
     """Serializer for the lesson content model."""
 
     content_type = ContentTypeSerializer()
+
+    def get_quiz_id_list(self, obj):
+        """Returns the list of quizzes for the content."""
+        return set(obj.quiz_id_list)  # pylint: disable=no-member
+
+    quiz_id_list = serializers.SerializerMethodField()
 
     class Meta:
         """Content serializer meta class."""
