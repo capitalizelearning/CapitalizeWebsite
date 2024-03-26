@@ -61,7 +61,7 @@ class WaitListView(APIView):
         return Response(
             {
                 "message":
-                "Thanks for joining the wait-list. Check you email for more information."
+                "Seems like you have already joined our wait-list. Check you email for more information."
             },
             status=status.HTTP_201_CREATED)
 
