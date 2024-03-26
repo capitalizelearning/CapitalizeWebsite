@@ -44,22 +44,26 @@ class WaitListView(APIView):
     permission_classes = [AllowAny]
     serializer_class = models.WaitListSerializer
 
-    @extend_schema(request=models.CreateWaitingListSerializer,
-                   responses={200: models.WaitListSerializer(many=True)})
+    @extend_schema(request=models.CreateWaitingListSerializer)
     def post(self, request):
-        """Adds a user to the wait-list"""
+        """Adds an email to the wait-list"""
         email: str = request.data.get('email')
         if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             raise exceptions.ValidationError("Invalid email address")
 
         # Check if user is already in the wait-list
-        user = models.WaitingList.objects.filter(email=email).first()  # pylint: disable=no-member
-        if user is not None:
+        existing = models.WaitingList.objects.filter(email=email).first()  # pylint: disable=no-member
+        if existing is not None:
             return Response({"message": "You are already on the wait-list"},
-                            status=status.HTTP_400_BAD_REQUEST)
+                            status=status.HTTP_200_OK)
         models.WaitingList.objects.create(email=email)  # pylint: disable=no-member
 
-        return Response(WaitListView.get(self, request).data)
+        return Response(
+            {
+                "message":
+                "Seems like you have already joined our wait-list. Check you email for more information."
+            },
+            status=status.HTTP_201_CREATED)
 
     @extend_schema(responses={200: models.WaitListSerializer(many=True)})
     def get(self, request):
