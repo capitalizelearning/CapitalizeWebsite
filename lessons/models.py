@@ -4,10 +4,12 @@
 """
 
 import json
+from datetime import timedelta
 from enum import Enum
 from typing import List
 
 from django.db import models
+from google.cloud import storage
 from rest_framework import serializers
 
 from accounts.models import Class, User
@@ -29,7 +31,7 @@ class Content(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
-    content_uri = models.TextField()  # cloud storage URI for the content file
+    blob_name = models.TextField()  # cloud storage blob_name
     content_type = models.CharField(max_length=10,
                                     choices=[(tag, tag.value)
                                              for tag in ContentFormat])
@@ -43,6 +45,22 @@ class Content(models.Model):
 
     def __str__(self):
         return f"<Content: {self.title}>"  # pylint: disable=no-member
+
+    def upload_content(self, file):
+        """Uploads the content file to GCP storage."""
+        pass
+
+    @property
+    def content_uri(self):
+        """Returns the content URI."""
+        blob = storage.Client().bucket("capitalize").blob(self.blob_name)
+        if blob.exists():
+            return blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(hours=1),
+                method="GET",
+            )
+        return None
 
 
 class Quiz(models.Model):
@@ -168,7 +186,6 @@ class CreateContentSerializer(serializers.HyperlinkedModelSerializer):
 
 class ContentSerializer(serializers.ModelSerializer):
     """Serializer for the lesson content model."""
-
     content_type = ContentTypeSerializer()
 
     def get_quiz_id_list(self, obj):
@@ -177,6 +194,11 @@ class ContentSerializer(serializers.ModelSerializer):
 
     quiz_id_list = serializers.SerializerMethodField()
 
+    def get_content_uri(self, obj):
+        """Returns the content URI."""
+        return obj.content_uri
+
+    content_uri = serializers.SerializerMethodField()
     class Meta:
         """Content serializer meta class."""
         model = Content
