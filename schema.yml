@@ -4,17 +4,6 @@ info:
   version: 1.0.0
   description: API documentation for the Capitalize application
 paths:
-  /v1/auth/admin/wait-list/:
-    get:
-      operationId: v1_auth_admin_wait_list_retrieve
-      description: Returns the wait-list
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
   /v1/auth/profile/:
     get:
       operationId: v1_auth_profile_retrieve
@@ -23,6 +12,67 @@ paths:
       - v1
       security:
       - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /v1/auth/register/:
+    post:
+      operationId: v1_auth_register_create
+      description: Creates a test user
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTestUser'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateTestUser'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateTestUser'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationToken'
+          description: ''
+  /v1/auth/register/{registration_token}/:
+    post:
+      operationId: v1_auth_register_create_2
+      description: Sets the password for a test user
+      parameters:
+      - in: path
+        name: registration_token
+        schema:
+          type: string
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetTestUserPassword'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SetTestUserPassword'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SetTestUserPassword'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
       responses:
         '200':
           description: No response body
@@ -81,9 +131,9 @@ paths:
                 $ref: '#/components/schemas/TokenRefresh'
           description: ''
   /v1/auth/wait-list/:
-    post:
-      operationId: v1_auth_wait_list_create
-      description: Adds a user to the wait-list
+    get:
+      operationId: v1_auth_wait_list_list
+      description: Returns the wait-list.
       tags:
       - v1
       security:
@@ -91,32 +141,89 @@ paths:
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WaitList'
+          description: ''
+    post:
+      operationId: v1_auth_wait_list_create
+      description: Adds a user to the wait-list
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWaitingList'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateWaitingList'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateWaitingList'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WaitList'
+          description: ''
   /v1/lessons/:
     get:
-      operationId: v1_lessons_retrieve
-      description: Returns the list of all lesson content.
+      operationId: v1_lessons_list
+      description: List lesson content.
       tags:
       - v1
       security:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Content'
+          description: ''
     post:
       operationId: v1_lessons_create
-      description: Creates new content. Requires staff permissions.
+      description: Create new lesson content. Requires staff permissions.
       tags:
       - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateContent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateContent'
+        required: true
       security:
       - jwtAuth: []
       responses:
         '201':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+          description: ''
   /v1/lessons/{content_id}/:
     get:
-      operationId: v1_lessons_retrieve_2
-      description: Returns the content by id.
+      operationId: v1_lessons_retrieve
+      description: Retrieve lesson content by id.
       parameters:
       - in: path
         name: content_id
@@ -129,10 +236,14 @@ paths:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+          description: ''
     put:
       operationId: v1_lessons_update
-      description: Updates content. Requires staff permissions.
+      description: Update lesson content by id.
       parameters:
       - in: path
         name: content_id
@@ -141,14 +252,30 @@ paths:
         required: true
       tags:
       - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateContent'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateContent'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateContent'
+        required: true
       security:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Content'
+          description: ''
     delete:
       operationId: v1_lessons_destroy
-      description: Deletes content. Requires staff permissions.
+      description: Delete lesson content by id.
       parameters:
       - in: path
         name: content_id
@@ -164,8 +291,8 @@ paths:
           description: No response body
   /v1/lessons/{content_id}/quizzes/:
     get:
-      operationId: v1_lessons_quizzes_retrieve_2
-      description: Returns the list of quizzes for a content.
+      operationId: v1_lessons_quizzes_list_2
+      description: List quizzes for a content.
       parameters:
       - in: path
         name: content_id
@@ -178,10 +305,16 @@ paths:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quiz'
+          description: ''
     post:
-      operationId: v1_lessons_quizzes_create_2
-      description: Creates a new quiz. Requires staff permissions.
+      operationId: v1_lessons_quizzes_create_3
+      description: Create new quiz. Requires staff permissions.
       parameters:
       - in: path
         name: content_id
@@ -190,18 +323,103 @@ paths:
         required: true
       tags:
       - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+        required: true
       security:
       - jwtAuth: []
       responses:
-        '201':
-          description: No response body
-  /v1/lessons/{content_id}/quizzes/{quiz_id}/:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+          description: ''
+  /v1/lessons/manage/quizzes/{quiz_id}/:
     get:
-      operationId: v1_lessons_quizzes_retrieve_3
-      description: Returns the quiz overview by id.
+      operationId: v1_lessons_manage_quizzes_retrieve
+      description: Retrieve a quiz by id.
       parameters:
       - in: path
-        name: content_id
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+          description: ''
+    put:
+      operationId: v1_lessons_manage_quizzes_update
+      description: Update a quiz by id.
+      parameters:
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+          description: ''
+    delete:
+      operationId: v1_lessons_manage_quizzes_destroy
+      description: Delete a quiz by id.
+      parameters:
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /v1/lessons/manage/quizzes/{quiz_id}/{question_id}/:
+    get:
+      operationId: v1_lessons_manage_quizzes_retrieve_2
+      description: Retrieve a quiz by id.
+      parameters:
+      - in: path
+        name: question_id
         schema:
           type: integer
         required: true
@@ -216,17 +434,91 @@ paths:
       - jwtAuth: []
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+          description: ''
+    put:
+      operationId: v1_lessons_manage_quizzes_update_2
+      description: Update a quiz by id.
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateQuiz'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Quiz'
+          description: ''
+    delete:
+      operationId: v1_lessons_manage_quizzes_destroy_2
+      description: Delete a quiz by id.
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
           description: No response body
-  /v1/lessons/quizzes/{quiz_id}/{question_id}/:
+  /v1/lessons/quizzes/:
+    get:
+      operationId: v1_lessons_quizzes_list
+      description: List all quizzes.
+      tags:
+      - v1
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Quiz'
+          description: ''
+  /v1/lessons/quizzes/{quiz_id}/:
     get:
       operationId: v1_lessons_quizzes_retrieve
-      description: Returns the question.
+      description: Retrieve a question by id with correct answer excluded.
       parameters:
-      - in: path
-        name: question_id
-        schema:
-          type: integer
-        required: true
       - in: path
         name: quiz_id
         schema:
@@ -238,32 +530,14 @@ paths:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedQuizQuestion'
+          description: ''
     post:
       operationId: v1_lessons_quizzes_create
-      description: Check the answer to a question.
-      parameters:
-      - in: path
-        name: question_id
-        schema:
-          type: integer
-        required: true
-      - in: path
-        name: quiz_id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-  /v1/lessons/quizzes/manage/{quiz_id}/:
-    get:
-      operationId: v1_lessons_quizzes_manage_retrieve
-      description: Returns the list of questions for a quiz.
+      description: Submits an answer to a question.
       parameters:
       - in: path
         name: quiz_id
@@ -272,31 +546,31 @@ paths:
         required: true
       tags:
       - v1
-      security:
-      - jwtAuth: []
-      responses:
-        '200':
-          description: No response body
-    post:
-      operationId: v1_lessons_quizzes_manage_create
-      description: Creates a new question for a quiz.
-      parameters:
-      - in: path
-        name: quiz_id
-        schema:
-          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizResponse'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuizResponse'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuizResponse'
         required: true
-      tags:
-      - v1
       security:
       - jwtAuth: []
       responses:
         '201':
-          description: No response body
-  /v1/lessons/quizzes/manage/{quiz_id}/{question_id}/:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+          description: ''
+  /v1/lessons/quizzes/{quiz_id}/{question_id}/:
     get:
-      operationId: v1_lessons_quizzes_manage_retrieve_2
-      description: Returns the question with the correct answer.
+      operationId: v1_lessons_quizzes_retrieve_2
+      description: Retrieve a question by id with correct answer excluded.
       parameters:
       - in: path
         name: question_id
@@ -314,9 +588,274 @@ paths:
       - jwtAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestrictedQuizQuestion'
+          description: ''
+    post:
+      operationId: v1_lessons_quizzes_create_2
+      description: Submits an answer to a question.
+      parameters:
+      - in: path
+        name: question_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: quiz_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - v1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizResponse'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/QuizResponse'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/QuizResponse'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+          description: ''
 components:
   schemas:
+    Content:
+      type: object
+      description: Serializer for the lesson content model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        content_type:
+          $ref: '#/components/schemas/ContentType'
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        content_uri:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content_type
+      - content_uri
+      - created_at
+      - description
+      - id
+      - title
+      - updated_at
+    ContentType:
+      type: object
+      description: Serializer for the lesson content type.
+      properties:
+        value:
+          type: string
+          maxLength: 10
+      required:
+      - value
+    CreateContent:
+      type: object
+      description: Serializer for creating a lesson content.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        content_uri:
+          type: string
+        content_type:
+          $ref: '#/components/schemas/ContentType'
+      required:
+      - content_type
+      - content_uri
+      - description
+      - id
+      - title
+    CreateQuiz:
+      type: object
+      description: Serializer for creating a lesson quiz.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        class_id:
+          type: string
+          format: uri
+          nullable: true
+        content_id:
+          type: integer
+        description:
+          type: string
+      required:
+      - content_id
+      - description
+      - id
+      - title
+    CreateTestUser:
+      type: object
+      description: Serializer for creating a test user.
+      properties:
+        waiting_list_id:
+          type: integer
+        first_name:
+          type: string
+          maxLength: 30
+        last_name:
+          type: string
+          maxLength: 150
+      required:
+      - waiting_list_id
+    CreateWaitingList:
+      type: object
+      description: Serializer for adding a user to the waiting list.
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    Quiz:
+      type: object
+      description: Serializer for the lesson quiz model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        question_list:
+          type: string
+          readOnly: true
+        is_completed:
+          type: string
+          readOnly: true
+        score:
+          type: string
+          readOnly: true
+        title:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        class_id:
+          type: integer
+          nullable: true
+        content_id:
+          type: integer
+        owner_id:
+          type: integer
+      required:
+      - content_id
+      - created_at
+      - description
+      - id
+      - is_completed
+      - owner_id
+      - question_list
+      - score
+      - title
+    QuizResponse:
+      type: object
+      description: Serializer for the lesson quiz response model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        score:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        quiz:
+          type: integer
+        question:
+          type: integer
+        student:
+          type: integer
+      required:
+      - created_at
+      - id
+      - question
+      - quiz
+      - score
+      - student
+    RegistrationToken:
+      type: object
+      description: Serializer for the registration token.
+      properties:
+        registration_token:
+          type: string
+          maxLength: 255
+      required:
+      - registration_token
+    RestrictedQuizQuestion:
+      type: object
+      description: Serializer for the lesson quiz question model. Excludes the correct
+        answer.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        quiz:
+          type: integer
+        question:
+          type: string
+        options: {}
+        weight:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+        score:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - options
+      - question
+      - quiz
+      - score
+    SetTestUserPassword:
+      type: object
+      description: Serializer for setting the password for a test user.
+      properties:
+        password:
+          type: string
+          maxLength: 128
+          minLength: 8
+      required:
+      - password
     TokenObtainPair:
       type: object
       properties:
@@ -349,8 +888,86 @@ components:
       required:
       - access
       - refresh
+    User:
+      type: object
+      description: Serializer for the user model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        is_staff:
+          type: boolean
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+        date_joined:
+          type: string
+          format: date-time
+        profile:
+          type: string
+          format: uri
+          readOnly: true
+        preferences:
+          type: string
+          format: uri
+          readOnly: true
+        enrollment:
+          type: string
+          format: uri
+          readOnly: true
+      required:
+      - enrollment
+      - id
+      - preferences
+      - profile
+      - username
+    WaitList:
+      type: object
+      description: Serializer for the waiting list model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        is_registered:
+          type: boolean
+      required:
+      - date_joined
+      - email
+      - id
   securitySchemes:
     jwtAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+servers:
+- url: https://api.capitalizelearn.com
+  description: Production server

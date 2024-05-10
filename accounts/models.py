@@ -3,29 +3,14 @@
     Contains account related models and their serializers.
 """
 from enum import Enum
+from secrets import token_urlsafe
 
 from django.contrib.auth.models import User
 from django.db import models
-from rest_framework import serializers
+from django.db.utils import IntegrityError
+from rest_framework import exceptions, serializers
 
-
-class UserSerializer(serializers.HyperlinkedModelSerializer):
-    """Serializer for the user model."""
-
-    profile = serializers.HyperlinkedRelatedField(view_name='profile-detail',
-                                                  read_only=True)
-    preferences = serializers.HyperlinkedRelatedField(
-        view_name='preferences-detail', read_only=True)
-    enrollment = serializers.HyperlinkedRelatedField(
-        view_name='enrollment-detail', read_only=True)
-
-    class Meta:
-        """Meta class for the user serializer."""
-        model = User
-        fields = [
-            'id', 'username', 'email', 'first_name', 'last_name', 'is_staff',
-            'is_active', 'date_joined', 'profile', 'preferences', 'enrollment'
-        ]
+from accounts.messaging import EmailService
 
 
 class WaitingList(models.Model):
@@ -41,6 +26,27 @@ class WaitingList(models.Model):
         return f"<WaitingList: {self.id}>"
 
 
+class CreateWaitingListSerializer(serializers.Serializer):
+    """Serializer for adding a user to the waiting list."""
+
+    email = serializers.EmailField()
+
+    class Meta:
+        """Meta class for the waiting list serializer."""
+        model = WaitingList
+        fields = ['id', 'email', 'date_joined']
+
+    def create(self, validated_data):
+        """Create and return a new WaitingList instance."""
+        return WaitingList.objects.create(**validated_data)  # pylint: disable=no-member
+
+    def update(self, instance, validated_data):
+        """Update and return an existing WaitingList instance."""
+        instance.email = validated_data.get('email', instance.email)
+        instance.save()
+        return instance
+
+
 class WaitListSerializer(serializers.HyperlinkedModelSerializer):
     """Serializer for the waiting list model."""
 
@@ -52,6 +58,7 @@ class WaitListSerializer(serializers.HyperlinkedModelSerializer):
 
 class ProfileType(Enum):
     """Enumeration for user profile types."""
+    TESTER = 'tester'
     STUDENT = 'student'
     INSTRUCTOR = 'instructor'
     ADMIN = 'admin'
@@ -62,16 +69,125 @@ class Profile(models.Model):
         Extends the default User model with additional fields through a one-to-one relationship."""
 
     id = models.AutoField(primary_key=True)
-    account_type = models.CharField(max_length=10,
-                                    choices=[(tag, tag.value)
-                                             for tag in ProfileType])
+    account_type = models.CharField(max_length=10)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    registration_token = models.CharField(max_length=255,
+                                          unique=True,
+                                          blank=True,
+                                          null=True)
     phone_number = models.CharField(max_length=15, unique=True, blank=True)
     is_2fa_enabled = models.BooleanField(default=False)
     streak_days = models.IntegerField(default=0)
 
+    def __init__(self, *args, set_token: bool = False, **kwargs):
+        super().__init__(*args, **kwargs)
+        if set_token:
+            self.generate_registration_token()
+
     def __str__(self):
         return f"<Profile: {self.user.username}>"  # pylint: disable=no-member
+
+    def generate_registration_token(self) -> str:
+        """Generates a unique token for account activation."""
+        token = token_urlsafe(128)
+        # pylint: disable=no-member
+        while Profile.objects.filter(registration_token=token).exists():
+            token = token_urlsafe(128)
+        self.registration_token = token
+        return token
+
+    @classmethod
+    def get_user_by_activation_token(cls, token: str) -> User | None:
+        """Get the user associated with the given activation token."""
+        # pylint: disable=no-member
+        profile = cls.objects.filter(registration_token=token).first()
+        return profile.user if profile else None
+
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for the user model."""
+
+    class Meta:
+        """Meta class for the user serializer."""
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+
+
+class CreateTestUserSerializer(serializers.Serializer):
+    """Serializer for creating a test user."""
+    waiting_list_id = serializers.IntegerField()
+    first_name = serializers.CharField(max_length=30, required=False)
+    last_name = serializers.CharField(max_length=150, required=False)
+
+    def create(self, validated_data):
+        """Create and return a new User instance."""
+        # pylint: disable=no-member
+        wl = WaitingList.objects.get(id=validated_data['waiting_list_id'])
+        if wl is None:
+            raise ValueError("Invalid waiting list id")
+
+        user: User = None
+        profile: Profile = None
+        try:
+            user = User.objects.create_user(
+                username=wl.email,
+                email=wl.email,
+                first_name=validated_data.get('first_name', ''),
+                last_name=validated_data.get('last_name', ''),
+            )
+            profile = Profile(user=user,
+                              account_type=ProfileType.TESTER.value,
+                              set_token=True)
+            profile.save()
+            EmailService().send_invite_email(user)
+            wl.is_registered = True
+            wl.save()
+            return profile
+        except IntegrityError as ie:
+            raise exceptions.ValidationError("User already exists") from ie
+        except Exception as e:
+            print(e)
+            if user.id:
+                user.delete()
+            if profile.id:
+                profile.delete()
+            raise exceptions.APIException(
+                "An error occurred while creating the test user") from e
+
+    def update(self, instance, validated_data):
+        """Update and return an existing User instance."""
+        instance.first_name = validated_data.get('first_name',
+                                                 instance.first_name)
+        instance.last_name = validated_data.get('last_name',
+                                                instance.last_name)
+        instance.save()
+        return instance
+
+
+class RegistrationTokenSerializer(serializers.Serializer):
+    """Serializer for the registration token."""
+    registration_token = serializers.CharField(max_length=255)
+
+    def create(self, validated_data):
+        """Create and return a new User instance."""
+        pass  # pylint: disable=unnecessary-pass
+
+    def update(self, instance, validated_data):
+        """Update and return an existing User instance."""
+        pass  # pylint: disable=unnecessary-pass
+
+
+class SetTestUserPasswordSerializer(serializers.Serializer):
+    """Serializer for setting the password for a test user."""
+    password = serializers.CharField(max_length=128, min_length=8)
+
+    def create(self, validated_data):
+        """Create and return a new User instance."""
+        pass  # pylint: disable=unnecessary-pass
+
+    def update(self, instance, validated_data):
+        """Update and return an existing User instance."""
+        pass  # pylint: disable=unnecessary-pass
 
 
 class ProfileSerializer(serializers.HyperlinkedModelSerializer):

@@ -4,10 +4,12 @@
 """
 
 import json
+from datetime import timedelta
 from enum import Enum
 from typing import List
 
 from django.db import models
+from google.cloud import storage
 from rest_framework import serializers
 
 from accounts.models import Class, User
@@ -29,7 +31,7 @@ class Content(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=100)
     description = models.TextField()
-    content_uri = models.TextField()  # cloud storage URI for the content file
+    blob_name = models.TextField()  # cloud storage blob_name
     content_type = models.CharField(max_length=10,
                                     choices=[(tag, tag.value)
                                              for tag in ContentFormat])
@@ -41,12 +43,24 @@ class Content(models.Model):
         """Returns the list of quiz ids for the content."""
         return [quiz.id for quiz in self.quiz_set.all()]  # pylint: disable=no-member
 
-    def get_quiz_list(self):
-        """Returns the list of quizzes for the content."""
-        return set(self.quiz_id_list)  # pylint: disable=no-member
-
     def __str__(self):
         return f"<Content: {self.title}>"  # pylint: disable=no-member
+
+    def upload_content(self, file):
+        """Uploads the content file to GCP storage."""
+        pass
+
+    @property
+    def content_uri(self):
+        """Returns the content URI."""
+        blob = storage.Client().bucket("capitalize").blob(self.blob_name)
+        if blob.exists():
+            return blob.generate_signed_url(
+                version="v4",
+                expiration=timedelta(hours=1),
+                method="GET",
+            )
+        return None
 
 
 class Quiz(models.Model):
@@ -139,16 +153,67 @@ class QuizResponse(models.Model):
 
 
 # Serializers Definitions
+class ContentTypeSerializer(serializers.Serializer):
+    """Serializer for the lesson content type."""
+    value = serializers.CharField(max_length=10)
+
+    def create(self, validated_data):
+        """overrides the create method."""
+        return ContentFormat(validated_data['value'])
+
+    def update(self, instance, validated_data):
+        """overrides the update method."""
+        return ContentFormat(validated_data['value'])
+
+    def to_representation(self, instance):
+        """Returns the content type value."""
+        return instance
+
+    def to_internal_value(self, data):
+        """Returns the content type value."""
+        return ContentFormat(data)
+
+
+class CreateContentSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for creating a lesson content."""
+    content_type = ContentTypeSerializer()
+
+    class Meta:
+        """Create content serializer meta class."""
+        model = Content
+        fields = ['id', 'title', 'description', 'content_uri', 'content_type']
+
+
 class ContentSerializer(serializers.ModelSerializer):
     """Serializer for the lesson content model."""
+    content_type = ContentTypeSerializer()
 
+    def get_quiz_id_list(self, obj):
+        """Returns the list of quizzes for the content."""
+        return set(obj.quiz_id_list)  # pylint: disable=no-member
+
+    quiz_id_list = serializers.SerializerMethodField()
+
+    def get_content_uri(self, obj):
+        """Returns the content URI."""
+        return obj.content_uri
+
+    content_uri = serializers.SerializerMethodField()
     class Meta:
         """Content serializer meta class."""
         model = Content
-        fields = [
-            'id', 'title', 'description', 'content_uri', 'content_type',
-            'created_at', 'updated_at', 'quiz_id_list'
-        ]
+        fields = '__all__'
+
+
+class CreateQuizSerializer(serializers.HyperlinkedModelSerializer):
+    """Serializer for creating a lesson quiz."""
+    content_id = serializers.PrimaryKeyRelatedField(
+        queryset=Content.objects.all())  # pylint: disable=no-member
+
+    class Meta:
+        """Create quiz serializer meta class."""
+        model = Quiz
+        fields = ['id', 'title', 'class_id', 'content_id', 'description']
 
 
 class QuizSerializer(serializers.ModelSerializer):
